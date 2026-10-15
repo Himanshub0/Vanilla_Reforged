@@ -1,0 +1,36 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.vanillareforged.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "vanilla_reforged.refmap.json",
+  "mixins": [
+    "ItemAccessor",
+    "ItemStackMixin",
+    "ServerRecipeManagerMixin",
+    "SmithingScreenHandlerMixin",
+    "SmithingTransformRecipeMixin",
+    "EnchantmentScreenHandlerMixin",
+    "VillagerEntityMixin",
+    "LivingEntityMixin",
+    "PersistentProjectileEntityMixin",
+    "PiglinEntityMixin",
+    "SpawnRestrictionAccessor",
+    "SkeletonEntityMixin",
+    "SpiderEntityMixin",
+    "BlazeEntityMixin",
+    "BlazeShootFireballGoalMixin",
+    "WitherSkeletonEntityMixin",
+    "ElderGuardianEntityMixin",
+    "ElderGuardianBeamGoalMixin",
+    "CreeperEntityMixin",
+    "WitchEntityMixin",
+    "HostileMobTuningMixin",
+    "ZombieEntityMixin",
+    "MobSpawnerLogicMixin"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

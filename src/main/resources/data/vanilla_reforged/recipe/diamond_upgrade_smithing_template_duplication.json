@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:amethyst_shard",
+    "S": "vanilla_reforged:diamond_upgrade_smithing_template",
+    "D": "minecraft:diamond"
+  },
+  "pattern": [
+    "AAA",
+    "ASA",
+    "ADA"
+  ],
+  "result": {
+    "count": 2,
+    "id": "vanilla_reforged:diamond_upgrade_smithing_template"
+  }
+}

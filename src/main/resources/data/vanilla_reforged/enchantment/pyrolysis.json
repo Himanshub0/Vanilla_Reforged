@@ -1,0 +1,23 @@
+{
+  "description": {
+    "translate": "enchantment.vanilla_reforged.pyrolysis"
+  },
+  "supported_items": "#vanilla_reforged:enchantable/pickaxe",
+  "primary_items": "#vanilla_reforged:enchantable/pickaxe",
+  "weight": 5,
+  "max_level": 1,
+  "min_cost": {
+    "base": 15,
+    "per_level_above_first": 0
+  },
+  "max_cost": {
+    "base": 50,
+    "per_level_above_first": 0
+  },
+  "anvil_cost": 4,
+  "slots": [
+    "mainhand"
+  ],
+  "exclusive_set": "#vanilla_reforged:exclusive_set/smelting_group",
+  "effects": {}
+}

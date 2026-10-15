@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "vanilla_reforged:gluttony",
+    "vanilla_reforged:kinetic_protection",
+    "vanilla_reforged:outreach",
+    "vanilla_reforged:pyrolysis",
+    "vanilla_reforged:retrieval",
+    "vanilla_reforged:stride",
+    "vanilla_reforged:swift_strike",
+    "vanilla_reforged:toxic",
+    "vanilla_reforged:vitality"
+  ]
+}

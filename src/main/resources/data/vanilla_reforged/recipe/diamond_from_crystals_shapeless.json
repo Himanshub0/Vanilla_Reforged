@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "vanilla_reforged:diamond_crystal",
+    "vanilla_reforged:diamond_crystal",
+    "vanilla_reforged:diamond_crystal",
+    "vanilla_reforged:diamond_crystal",
+    "minecraft:amethyst_shard",
+    "minecraft:amethyst_shard",
+    "minecraft:amethyst_shard",
+    "minecraft:amethyst_shard"
+  ],
+  "result": {
+    "count": 1,
+    "id": "minecraft:diamond"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "vanilla_reforged:item/king_zombie_spawn_egg"
+  }
+}

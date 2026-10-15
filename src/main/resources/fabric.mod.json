@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "vanilla_reforged",
+  "version": "${version}",
+  "name": "Vanilla Reforged",
+  "description": "Challenging RPG-style progression overhaul: Phase 1 Core Progression, Gold Mining Tier, Diamond Crystals, Smithing Upgrades & Resource Economy.",
+  "authors": [
+    "Vanilla Reforged Team"
+  ],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.vanillareforged.VanillaReforgedMod"
+    ],
+    "client": [
+      "com.vanillareforged.client.VanillaReforgedClient"
+    ]
+  },
+  "mixins": [
+    "vanilla_reforged.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

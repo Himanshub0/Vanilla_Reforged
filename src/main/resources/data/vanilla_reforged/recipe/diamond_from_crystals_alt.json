@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": "vanilla_reforged:diamond_crystal",
+    "A": "minecraft:amethyst_shard"
+  },
+  "pattern": [
+    "CCC",
+    "CAA",
+    "AA "
+  ],
+  "result": {
+    "count": 1,
+    "id": "minecraft:diamond"
+  }
+}

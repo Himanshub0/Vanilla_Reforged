@@ -1,0 +1,33 @@
+{
+  "display": {
+    "icon": {
+      "id": "vanilla_reforged:dire_wolf_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.vanilla_reforged.tame_dire_wolf.title"
+    },
+    "description": {
+      "translate": "advancements.vanilla_reforged.tame_dire_wolf.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "minecraft:husbandry/tame_an_animal",
+  "criteria": {
+    "tame_dire_wolf": {
+      "trigger": "minecraft:tame_animal",
+      "conditions": {
+        "entity": {
+          "type": "vanilla_reforged:dire_wolf"
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "tame_dire_wolf"
+    ]
+  ]
+}

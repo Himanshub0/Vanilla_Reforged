@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": "vanilla_reforged:diamond_upgrade_smithing_template",
+  "base": "minecraft:golden_pickaxe",
+  "addition": "minecraft:diamond",
+  "result": {
+    "id": "minecraft:diamond_pickaxe"
+  }
+}

@@ -1,0 +1,30 @@
+# Gradle & Java build artifacts
+.gradle/
+build/
+bin/
+out/
+
+# Fabric Loom run directory & logs
+run/
+logs/
+crash-reports/
+
+# Reverse engineering and temporary decompilation files
+temp_extract/
+mappings/
+*.tiny
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE & Editor files
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+Desktop.ini

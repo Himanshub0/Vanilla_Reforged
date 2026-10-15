@@ -1,0 +1,25 @@
+{
+  "replace": false,
+  "values": [
+    "vanilla_reforged:curse_of_breaking",
+    "vanilla_reforged:curse_of_clumsiness",
+    "vanilla_reforged:curse_of_displacement",
+    "vanilla_reforged:curse_of_double_edge",
+    "vanilla_reforged:breeze_burst",
+    "vanilla_reforged:ice_aspect",
+    "vanilla_reforged:outreach",
+    "vanilla_reforged:swift_strike",
+    "vanilla_reforged:toxic",
+    "vanilla_reforged:websnare",
+    "vanilla_reforged:crabs_touch",
+    "vanilla_reforged:gluttony",
+    "vanilla_reforged:pyrolysis",
+    "vanilla_reforged:kinetic_protection",
+    "vanilla_reforged:retrieval",
+    "vanilla_reforged:scorch_walker",
+    "vanilla_reforged:skyguard",
+    "vanilla_reforged:stride",
+    "vanilla_reforged:vitality",
+    "vanilla_reforged:graviole"
+  ]
+}
