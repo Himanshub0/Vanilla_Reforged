@@ -10,5 +10,4 @@ pluginManagement {
 }
 
 rootProject.name = 'vanilla_reforged'
-include 'sandbox:pocket-repose'
 
