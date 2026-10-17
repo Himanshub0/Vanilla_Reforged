@@ -1295,7 +1295,55 @@ public class VanillaReforgedTest {
         assertTrue(clientContent.contains("FlyingItemEntityRenderer") && clientContent.contains("EmptyEntityRenderer"),
             "VanillaReforgedClient must register FlyingItemEntityRenderer and EmptyEntityRenderer");
     }
+
+    @Test
+    @DisplayName("Verify Dire Wolf: Horse-Like Movements, Speed (8-9), Jump (1.5-2), and Stat Variation")
+    public void testDireWolfHorseLikeDynamicsAndStatVariation() throws IOException {
+        // 1. Config Speed & Jump Tuning
+        assertEquals(0.19, com.vanillareforged.config.ModConfig.DIRE_WOLF_BASE_SPEED_MIN, 0.001,
+            "Dire Wolf base speed min must be 0.19 (~8 blocks/sec)");
+        assertEquals(0.21, com.vanillareforged.config.ModConfig.DIRE_WOLF_BASE_SPEED_MAX, 0.001,
+            "Dire Wolf base speed max must be 0.21 (~9 blocks/sec)");
+        assertEquals(0.50, com.vanillareforged.config.ModConfig.DIRE_WOLF_JUMP_STRENGTH_MIN, 0.001,
+            "Dire Wolf jump strength min must be 0.50 (~1.5 blocks jump height)");
+        assertEquals(0.60, com.vanillareforged.config.ModConfig.DIRE_WOLF_JUMP_STRENGTH_MAX, 0.001,
+            "Dire Wolf jump strength max must be 0.60 (~2.0 blocks jump height)");
+        assertEquals(90.0, com.vanillareforged.config.ModConfig.DIRE_WOLF_HEALTH_MIN, 0.001,
+            "Dire Wolf health min must be 90.0 HP");
+        assertEquals(110.0, com.vanillareforged.config.ModConfig.DIRE_WOLF_HEALTH_MAX, 0.001,
+            "Dire Wolf health max must be 110.0 HP");
+
+        // 2. DireWolfEntity Code Inspection
+        File direWolfFile = new File("src/main/java/com/vanillareforged/entity/DireWolfEntity.java");
+        assertTrue(direWolfFile.exists(), "DireWolfEntity.java must exist");
+        String content = Files.readString(direWolfFile.toPath());
+
+        // JumpingMount & Movements
+        assertTrue(content.contains("implements JumpingMount"),
+            "DireWolfEntity must implement JumpingMount for horse-like jump meter and controls");
+        assertTrue(content.contains("controllingPlayer.isSprinting()"),
+            "DireWolfEntity getSaddledSpeed must support sprint/gallop run type");
+        assertTrue(content.contains("getJumpVelocity"),
+            "DireWolfEntity must calculate jump velocity from JUMP_STRENGTH like horses");
+        assertTrue(content.contains("executeMountJump"),
+            "DireWolfEntity must execute horse-like jump with forward momentum");
+
+        // Stat variation on initialize
+        assertTrue(content.contains("DIRE_WOLF_HEALTH_MIN") && content.contains("DIRE_WOLF_HEALTH_MAX"),
+            "DireWolfEntity initialize must vary health like horses");
+        assertTrue(content.contains("DIRE_WOLF_BASE_SPEED_MIN") && content.contains("DIRE_WOLF_BASE_SPEED_MAX"),
+            "DireWolfEntity initialize must vary speed (8-9 blocks/sec) like horses");
+        assertTrue(content.contains("DIRE_WOLF_JUMP_STRENGTH_MIN") && content.contains("DIRE_WOLF_JUMP_STRENGTH_MAX"),
+            "DireWolfEntity initialize must vary jump strength (1.5-2.0 blocks) like horses");
+
+        // Horse-like breeding inheritance
+        assertTrue(content.contains("createChild"),
+            "DireWolfEntity must implement createChild");
+        assertTrue(content.contains("/ 3.0"),
+            "DireWolfEntity createChild must implement horse-like (parent1 + parent2 + random) / 3 stat inheritance");
+    }
 }
+
 
 
 

@@ -99,10 +99,10 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
         return WolfEntity.createWolfAttributes()
             .add(EntityAttributes.MAX_HEALTH, ModConfig.DIRE_WOLF_MAX_HEALTH)
             .add(EntityAttributes.ATTACK_DAMAGE, ModConfig.DIRE_WOLF_ATTACK_DAMAGE)
-            .add(EntityAttributes.MOVEMENT_SPEED, 0.30 * ModConfig.DIRE_WOLF_SPEED_MULTIPLIER)
+            .add(EntityAttributes.MOVEMENT_SPEED, (ModConfig.DIRE_WOLF_BASE_SPEED_MIN + ModConfig.DIRE_WOLF_BASE_SPEED_MAX) / 2.0) // 0.30 * ModConfig.DIRE_WOLF_SPEED_MULTIPLIER
             .add(EntityAttributes.SCALE, ModConfig.DIRE_WOLF_SCALE)
             .add(EntityAttributes.STEP_HEIGHT, 1.0625)
-            .add(EntityAttributes.JUMP_STRENGTH, 0.8)
+            .add(EntityAttributes.JUMP_STRENGTH, (ModConfig.DIRE_WOLF_JUMP_STRENGTH_MIN + ModConfig.DIRE_WOLF_JUMP_STRENGTH_MAX) / 2.0)
             .add(EntityAttributes.FOLLOW_RANGE, 48.0);
     }
 
@@ -135,7 +135,29 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
         // Dire wolves are apex predators: strictly full-grown adults
         this.setBaby(false);
         this.setBreedingAge(0);
-        this.setHealth((float) ModConfig.DIRE_WOLF_MAX_HEALTH);
+
+        // Horse-like individual stat variation:
+        net.minecraft.util.math.random.Random rand = this.getRandom();
+
+        // 1. Health variation: 90.0 - 110.0 HP (centered around 100 HP)
+        double health = ModConfig.DIRE_WOLF_HEALTH_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_HEALTH_MAX - ModConfig.DIRE_WOLF_HEALTH_MIN);
+        double roundedHealth = Math.round(health);
+        if (this.getAttributeInstance(EntityAttributes.MAX_HEALTH) != null) {
+            this.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(roundedHealth);
+        }
+        this.setHealth((float) roundedHealth);
+
+        // 2. Movement speed variation: 0.19 - 0.21 (speed of 8 - 9 blocks/sec)
+        double speed = ModConfig.DIRE_WOLF_BASE_SPEED_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_BASE_SPEED_MAX - ModConfig.DIRE_WOLF_BASE_SPEED_MIN);
+        if (this.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED) != null) {
+            this.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED).setBaseValue(speed);
+        }
+
+        // 3. Jump strength variation: 0.50 - 0.60 (jump height of 1.5 - 2.0 blocks)
+        double jump = ModConfig.DIRE_WOLF_JUMP_STRENGTH_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_JUMP_STRENGTH_MAX - ModConfig.DIRE_WOLF_JUMP_STRENGTH_MIN);
+        if (this.getAttributeInstance(EntityAttributes.JUMP_STRENGTH) != null) {
+            this.getAttributeInstance(EntityAttributes.JUMP_STRENGTH).setBaseValue(jump);
+        }
 
         // Biome-based variant is automatically selected by super.initialize() via Variants.select!
         // Sync legacy int variant for backwards compatibility with tests and saved worlds:
@@ -180,11 +202,15 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
 
     @Override
     protected void updateAttributesForTamed() {
-        // Dire Wolf retains 100 HP when tamed!
-        if (this.getAttributeInstance(EntityAttributes.MAX_HEALTH) != null) {
-            this.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(ModConfig.DIRE_WOLF_MAX_HEALTH);
+        // Dire Wolf retains its individual high health when tamed (vanilla wolf resets it to 40)
+        double currentMax = this.getAttributeBaseValue(EntityAttributes.MAX_HEALTH);
+        if (currentMax < ModConfig.DIRE_WOLF_HEALTH_MIN) {
+            currentMax = ModConfig.DIRE_WOLF_MAX_HEALTH;
         }
-        this.setHealth((float) ModConfig.DIRE_WOLF_MAX_HEALTH);
+        if (this.getAttributeInstance(EntityAttributes.MAX_HEALTH) != null) {
+            this.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(currentMax);
+        }
+        this.setHealth((float) currentMax);
     }
 
     @Override
@@ -336,7 +362,11 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
 
     @Override
     protected float getSaddledSpeed(PlayerEntity controllingPlayer) {
-        return (float) this.getAttributeValue(EntityAttributes.MOVEMENT_SPEED);
+        float speed = (float) this.getAttributeValue(EntityAttributes.MOVEMENT_SPEED);
+        if (controllingPlayer.isSprinting()) {
+            speed *= 1.25f; // Sprint / gallop run type like horse
+        }
+        return speed;
     }
 
     @Override
@@ -361,20 +391,20 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
 
     @Override
     protected int computeFallDamage(double fallDistance, float damageMultiplier) {
-        return super.computeFallDamage(Math.max(0.0, fallDistance - 6.0), damageMultiplier);
+        return super.computeFallDamage(Math.max(0.0, fallDistance - 5.0), damageMultiplier);
     }
 
     protected void executeMountJump(float strength, Vec3d movementInput) {
-        double jumpY = (0.42 + strength * 0.40) * 1.5;
+        float jumpVelocity = this.getJumpVelocity(strength);
         Vec3d velocity = this.getVelocity();
-        this.setVelocity(velocity.x, jumpY, velocity.z);
+        this.setVelocity(velocity.x, (double) jumpVelocity, velocity.z);
         this.velocityDirty = true;
         if (movementInput.z > 0.0) {
-            float f = MathHelper.sin(this.getYaw() * ((float) Math.PI / 180.0f));
-            float g = MathHelper.cos(this.getYaw() * ((float) Math.PI / 180.0f));
-            this.setVelocity(this.getVelocity().add(-0.35f * f * strength, 0.0, 0.35f * g * strength));
+            float f = MathHelper.sin(this.getYaw() * 0.017453292f);
+            float g = MathHelper.cos(this.getYaw() * 0.017453292f);
+            this.setVelocity(this.getVelocity().add(-0.4f * f * strength, 0.0, 0.4f * g * strength));
         }
-        this.playSound(SoundEvents.ENTITY_WOLF_STEP, 1.0f, 0.8f);
+        this.playSound(SoundEvents.ENTITY_HORSE_JUMP, 0.8f, 1.0f);
     }
 
     @Override
@@ -721,7 +751,30 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
                 child.updateAttributesForTamed();
             }
             if (entity instanceof DireWolfEntity otherWolf) {
-                if (this.random.nextBoolean()) {
+                // Horse-like breeding stat inheritance: (parent1 + parent2 + random) / 3
+                net.minecraft.util.math.random.Random rand = this.getRandom();
+                double speed = (this.getAttributeBaseValue(EntityAttributes.MOVEMENT_SPEED) 
+                    + otherWolf.getAttributeBaseValue(EntityAttributes.MOVEMENT_SPEED) 
+                    + (ModConfig.DIRE_WOLF_BASE_SPEED_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_BASE_SPEED_MAX - ModConfig.DIRE_WOLF_BASE_SPEED_MIN))) / 3.0;
+                double jump = (this.getAttributeBaseValue(EntityAttributes.JUMP_STRENGTH) 
+                    + otherWolf.getAttributeBaseValue(EntityAttributes.JUMP_STRENGTH) 
+                    + (ModConfig.DIRE_WOLF_JUMP_STRENGTH_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_JUMP_STRENGTH_MAX - ModConfig.DIRE_WOLF_JUMP_STRENGTH_MIN))) / 3.0;
+                double health = (this.getAttributeBaseValue(EntityAttributes.MAX_HEALTH) 
+                    + otherWolf.getAttributeBaseValue(EntityAttributes.MAX_HEALTH) 
+                    + (ModConfig.DIRE_WOLF_HEALTH_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_HEALTH_MAX - ModConfig.DIRE_WOLF_HEALTH_MIN))) / 3.0;
+
+                if (child.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED) != null) {
+                    child.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED).setBaseValue(speed);
+                }
+                if (child.getAttributeInstance(EntityAttributes.JUMP_STRENGTH) != null) {
+                    child.getAttributeInstance(EntityAttributes.JUMP_STRENGTH).setBaseValue(jump);
+                }
+                if (child.getAttributeInstance(EntityAttributes.MAX_HEALTH) != null) {
+                    child.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(Math.round(health));
+                }
+                child.setHealth((float) Math.round(health));
+
+                if (rand.nextBoolean()) {
                     child.setVariant(this.getVariant());
                 } else {
                     child.setVariant(otherWolf.getVariant());
