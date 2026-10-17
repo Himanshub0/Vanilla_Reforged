@@ -92,6 +92,7 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
     public DireWolfEntity(EntityType<? extends WolfEntity> entityType, World world) {
         super(entityType, world);
         this.setHealth((float) ModConfig.DIRE_WOLF_MAX_HEALTH);
+        this.calculateDimensions();
     }
 
     public static DefaultAttributeContainer.Builder createDireWolfAttributes() {
@@ -149,6 +150,7 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
                 this.setVariant(0);
             }
         }
+        this.calculateDimensions();
         return data;
     }
 
@@ -200,6 +202,7 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
         if (this.getAttributeInstance(EntityAttributes.MAX_HEALTH) != null) {
             this.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(ModConfig.DIRE_WOLF_MAX_HEALTH);
         }
+        this.calculateDimensions();
     }
 
     @Override
@@ -726,6 +729,26 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
             }
         }
         return child;
+    }
+
+    @Override
+    public void setSitting(boolean sitting) {
+        super.setSitting(sitting);
+        this.calculateDimensions();
+    }
+
+    @Override
+    public void setInSittingPose(boolean inSittingPose) {
+        super.setInSittingPose(inSittingPose);
+        this.calculateDimensions();
+    }
+
+    @Override
+    public void onTrackedDataSet(TrackedData<?> data) {
+        super.onTrackedDataSet(data);
+        if (TAMEABLE_FLAGS.equals(data)) {
+            this.calculateDimensions();
+        }
     }
 
     @Override

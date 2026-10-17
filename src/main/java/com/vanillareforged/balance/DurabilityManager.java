@@ -179,6 +179,7 @@ public final class DurabilityManager {
 
         // 5. Gold Tools
         registerTool(toolMap, durMap, Items.GOLDEN_SWORD, new ToolStats(GOLD_TOOL_DURABILITY, 6.0, 1.7, null, GOLD_TOOL_ENCHANTABILITY));
+        registerTool(toolMap, durMap, Items.GOLDEN_SPEAR, new ToolStats(GOLD_TOOL_DURABILITY, 3.6, 1.9, null, GOLD_TOOL_ENCHANTABILITY));
         registerTool(toolMap, durMap, Items.GOLDEN_AXE, new ToolStats(GOLD_TOOL_DURABILITY, 9.0, 1.0, GOLD_MINING_SPEED, GOLD_TOOL_ENCHANTABILITY));
         registerTool(toolMap, durMap, Items.GOLDEN_PICKAXE, new ToolStats(GOLD_TOOL_DURABILITY, 5.0, 1.3, GOLD_MINING_SPEED, GOLD_TOOL_ENCHANTABILITY));
         registerTool(toolMap, durMap, Items.GOLDEN_SHOVEL, new ToolStats(GOLD_TOOL_DURABILITY, 5.0, 1.1, GOLD_MINING_SPEED, GOLD_TOOL_ENCHANTABILITY));

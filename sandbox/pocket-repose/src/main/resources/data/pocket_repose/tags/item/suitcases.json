@@ -1,0 +1,23 @@
+{
+  "replace": false,
+  "values": [
+    "pocket_repose:suitcase",
+    "pocket_repose:white_suitcase",
+    "pocket_repose:orange_suitcase",
+    "pocket_repose:magenta_suitcase",
+    "pocket_repose:light_blue_suitcase",
+    "pocket_repose:yellow_suitcase",
+    "pocket_repose:lime_suitcase",
+    "pocket_repose:pink_suitcase",
+    "pocket_repose:gray_suitcase",
+    "pocket_repose:light_gray_suitcase",
+    "pocket_repose:cyan_suitcase",
+    "pocket_repose:purple_suitcase",
+    "pocket_repose:blue_suitcase",
+    "pocket_repose:brown_suitcase",
+    "pocket_repose:green_suitcase",
+    "pocket_repose:red_suitcase",
+    "pocket_repose:black_suitcase",
+    "pocket_repose:secret_barrel"
+  ]
+}

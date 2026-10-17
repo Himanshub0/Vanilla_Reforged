@@ -287,15 +287,15 @@ public class Phase3HostileMobTest {
     @Test
     @DisplayName("Verify King Zombie Stats, Diamond King Variant, and King's Call Boss Ability")
     public void testKingZombieBossMechanicsAndVariants() throws IOException {
-        assertEquals(100.0, ModConfig.KING_ZOMBIE_MAX_HEALTH, 0.001);
+        assertEquals(80.0, ModConfig.KING_ZOMBIE_MAX_HEALTH, 0.001);
         assertEquals(1.5f, ModConfig.KING_ZOMBIE_SCALE, 0.001f);
-        assertEquals(6.0, ModConfig.KING_ZOMBIE_ATTACK_DAMAGE, 0.001);
+        assertEquals(5.0, ModConfig.KING_ZOMBIE_ATTACK_DAMAGE, 0.001);
         assertEquals(0.5, ModConfig.KING_ZOMBIE_KNOCKBACK_RESISTANCE, 0.001);
         assertEquals(40.0, ModConfig.KING_ZOMBIE_FOLLOW_RANGE, 0.001);
         assertEquals(0.05, ModConfig.DIAMOND_KING_CHANCE, 0.001);
-        assertEquals(50.0f, ModConfig.KINGS_CALL_THRESHOLD_HEALTH, 0.001f);
-        assertEquals(5, ModConfig.KINGS_CALL_MIN_SUMMONS);
-        assertEquals(10, ModConfig.KINGS_CALL_MAX_SUMMONS);
+        assertEquals(40.0f, ModConfig.KINGS_CALL_THRESHOLD_HEALTH, 0.001f);
+        assertEquals(3, ModConfig.KINGS_CALL_MIN_SUMMONS);
+        assertEquals(6, ModConfig.KINGS_CALL_MAX_SUMMONS);
 
         File kingFile = new File("src/main/java/com/vanillareforged/entity/KingZombieEntity.java");
         assertTrue(kingFile.exists());

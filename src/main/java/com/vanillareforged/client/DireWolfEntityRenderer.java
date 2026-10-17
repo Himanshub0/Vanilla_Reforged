@@ -13,6 +13,7 @@ public class DireWolfEntityRenderer extends WolfEntityRenderer {
 
     public DireWolfEntityRenderer(EntityRendererFactory.Context context) {
         super(context);
+        this.shadowRadius = 1.0f;
         // Uses EntityModelLayers.WOLF via parent WolfEntityRenderer
     }
 

@@ -21,14 +21,14 @@ public class ModConfig {
     public static double ZOMBIE_ARMOR_IRON_WEIGHT = 0.20;
 
     // Section 4: King Zombie
-    public static double KING_ZOMBIE_MAX_HEALTH = 100.0;
+    public static double KING_ZOMBIE_MAX_HEALTH = 80.0;
     public static float KING_ZOMBIE_SCALE = 1.5f;
-    public static double KING_ZOMBIE_ATTACK_DAMAGE = 6.0;
+    public static double KING_ZOMBIE_ATTACK_DAMAGE = 5.0;
     public static double KING_ZOMBIE_KNOCKBACK_RESISTANCE = 0.5;
     public static double KING_ZOMBIE_FOLLOW_RANGE = 40.0;
-    public static float KINGS_CALL_THRESHOLD_HEALTH = 50.0f;
-    public static int KINGS_CALL_MIN_SUMMONS = 5;
-    public static int KINGS_CALL_MAX_SUMMONS = 10;
+    public static float KINGS_CALL_THRESHOLD_HEALTH = 40.0f;
+    public static int KINGS_CALL_MIN_SUMMONS = 3;
+    public static int KINGS_CALL_MAX_SUMMONS = 6;
     public static double KINGS_CALL_TRIGGER_RELIABILITY = 1.0;
 
     // Section 6: Skeletons & Spiders
@@ -46,6 +46,8 @@ public class ModConfig {
 
     // Section 2 & 9: General Hostile Mob Health Tuning (10% Increase)
     public static double CREEPER_MAX_HEALTH = 22.0;
+    public static boolean CREEPER_DESTROYS_BLOCKS = false;
+    public static float CREEPER_EXPLOSION_POWER_MULTIPLIER = 1.5f;
     public static double WITCH_MAX_HEALTH = 29.0;
     public static double SKELETON_MAX_HEALTH = 22.0;
     public static double STRAY_MAX_HEALTH = 22.0;

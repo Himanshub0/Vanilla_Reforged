@@ -603,14 +603,14 @@ public class VanillaReforgedTest {
     @DisplayName("Verify King Zombie Entity Attributes, DataTrackers & Mechanics")
     public void testKingZombieEntityAndStats() throws IOException {
         // 1. ModConfig constants
-        assertEquals(100.0, com.vanillareforged.config.ModConfig.KING_ZOMBIE_MAX_HEALTH);
+        assertEquals(80.0, com.vanillareforged.config.ModConfig.KING_ZOMBIE_MAX_HEALTH);
         assertEquals(1.5f, com.vanillareforged.config.ModConfig.KING_ZOMBIE_SCALE);
-        assertEquals(6.0, com.vanillareforged.config.ModConfig.KING_ZOMBIE_ATTACK_DAMAGE);
+        assertEquals(5.0, com.vanillareforged.config.ModConfig.KING_ZOMBIE_ATTACK_DAMAGE);
         assertEquals(0.5, com.vanillareforged.config.ModConfig.KING_ZOMBIE_KNOCKBACK_RESISTANCE);
         assertEquals(40.0, com.vanillareforged.config.ModConfig.KING_ZOMBIE_FOLLOW_RANGE);
-        assertEquals(50.0f, com.vanillareforged.config.ModConfig.KINGS_CALL_THRESHOLD_HEALTH);
-        assertEquals(5, com.vanillareforged.config.ModConfig.KINGS_CALL_MIN_SUMMONS);
-        assertEquals(10, com.vanillareforged.config.ModConfig.KINGS_CALL_MAX_SUMMONS);
+        assertEquals(40.0f, com.vanillareforged.config.ModConfig.KINGS_CALL_THRESHOLD_HEALTH);
+        assertEquals(3, com.vanillareforged.config.ModConfig.KINGS_CALL_MIN_SUMMONS);
+        assertEquals(6, com.vanillareforged.config.ModConfig.KINGS_CALL_MAX_SUMMONS);
         assertEquals(1.0, com.vanillareforged.config.ModConfig.KINGS_CALL_TRIGGER_RELIABILITY);
         assertEquals(0.05, com.vanillareforged.config.ModConfig.DIAMOND_KING_CHANCE);
 
@@ -937,7 +937,7 @@ public class VanillaReforgedTest {
         assertTrue(entitiesContent.contains("EntityDimensions.changing(0.9f, 0.95f).withEyeHeight(0.85f)"),
             "ModEntities must define Dire Wolf dimensions with 0.9f width, 0.95f height, and 0.85f eye height");
 
-        // 2. Verify DireWolfEntity sitting dimension override
+        // 2. Verify DireWolfEntity sitting dimension override and calculateDimensions calls
         File direWolfFile = new File("src/main/java/com/vanillareforged/entity/DireWolfEntity.java");
         assertTrue(direWolfFile.exists());
         String direWolfContent = Files.readString(direWolfFile.toPath());
@@ -945,6 +945,15 @@ public class VanillaReforgedTest {
             "DireWolfEntity must override getBaseDimensions for sitting pose");
         assertTrue(direWolfContent.contains("scaled(1.0f, 0.85f)"),
             "DireWolfEntity must scale sitting height by 0.85f");
+        assertTrue(direWolfContent.contains("this.calculateDimensions()"),
+            "DireWolfEntity must call calculateDimensions to scale collision box to 2.0x model size");
+
+        // 3. Verify DireWolfEntityRenderer sets 1.0f shadow radius
+        File direWolfRendererFile = new File("src/main/java/com/vanillareforged/client/DireWolfEntityRenderer.java");
+        assertTrue(direWolfRendererFile.exists());
+        String rendererContent = Files.readString(direWolfRendererFile.toPath());
+        assertTrue(rendererContent.contains("this.shadowRadius = 1.0f;"),
+            "DireWolfEntityRenderer must set 1.0f shadow radius for 2.0x scale wolf");
     }
 
     @Test
@@ -1175,6 +1184,53 @@ public class VanillaReforgedTest {
         assertEquals(2.925f, scaled.height(), 0.001f, "King Zombie scaled height must be exactly 2.925f (1.95f * 1.5)");
         assertEquals(2.61f, scaled.eyeHeight(), 0.001f, "King Zombie scaled eye height must be exactly 2.61f (1.74f * 1.5)");
         assertFalse(scaled.fixed(), "Scaled dimensions must not be fixed");
+    }
+
+    @Test
+    @DisplayName("Verify Creeper No Block Destruction, Golden Spear Rebalance, and Piglin Gold Trim Pacification")
+    public void testCreeperSpearAndPiglinTrimFeatures() throws IOException {
+        // 1. Creeper Explosion Tuning
+        assertFalse(com.vanillareforged.config.ModConfig.CREEPER_DESTROYS_BLOCKS,
+            "Creeper explosions must not destroy blocks");
+        assertEquals(1.5f, com.vanillareforged.config.ModConfig.CREEPER_EXPLOSION_POWER_MULTIPLIER, 0.001f,
+            "Creeper blast impact multiplier must be 1.5x");
+
+        File creeperMixinFile = new File("src/main/java/com/vanillareforged/mixin/CreeperEntityMixin.java");
+        assertTrue(creeperMixinFile.exists());
+        String creeperContent = Files.readString(creeperMixinFile.toPath());
+        assertTrue(creeperContent.contains("redirectCreeperExplosion"),
+            "CreeperEntityMixin must implement redirectCreeperExplosion");
+        assertTrue(creeperContent.contains("World.ExplosionSourceType.NONE"),
+            "CreeperEntityMixin must set explosion type to NONE to prevent block destruction");
+        assertTrue(creeperContent.contains("ModConfig.CREEPER_EXPLOSION_POWER_MULTIPLIER"),
+            "CreeperEntityMixin must apply power multiplier for greater blast impact");
+
+        // 2. Golden Spear Rebalance
+        File durabilityManagerFile = new File("src/main/java/com/vanillareforged/balance/DurabilityManager.java");
+        assertTrue(durabilityManagerFile.exists(), "DurabilityManager.java must exist");
+        String durContent = Files.readString(durabilityManagerFile.toPath());
+        assertTrue(durContent.contains("registerTool(toolMap, durMap, Items.GOLDEN_SPEAR, new ToolStats(GOLD_TOOL_DURABILITY, 3.6, 1.9, null, GOLD_TOOL_ENCHANTABILITY));"),
+            "Golden Spear must be registered in DurabilityManager with gold sword durability (1170), 3.6 damage (60%), 1.9 attack speed, and gold enchantability (22)");
+        assertEquals(1170, DurabilityManager.GOLD_TOOL_DURABILITY,
+            "Golden Spear must have gold sword durability (1170)");
+        assertEquals(22, DurabilityManager.GOLD_TOOL_ENCHANTABILITY,
+            "Golden Spear enchantability must match gold tools (22)");
+
+        // 3. Piglin Gold Trim Pacification
+        File piglinBrainMixinFile = new File("src/main/java/com/vanillareforged/mixin/PiglinBrainMixin.java");
+        assertTrue(piglinBrainMixinFile.exists());
+        String piglinBrainContent = Files.readString(piglinBrainMixinFile.toPath());
+        assertTrue(piglinBrainContent.contains("isWearingPiglinSafeArmor"),
+            "PiglinBrainMixin must inject into isWearingPiglinSafeArmor");
+        assertTrue(piglinBrainContent.contains("DataComponentTypes.TRIM"),
+            "PiglinBrainMixin must check DataComponentTypes.TRIM");
+        assertTrue(piglinBrainContent.contains("ArmorTrimMaterials.GOLD"),
+            "PiglinBrainMixin must check for gold trim material");
+
+        File mixinsJsonFile = new File("src/main/resources/vanilla_reforged.mixins.json");
+        String mixinsJsonContent = Files.readString(mixinsJsonFile.toPath());
+        assertTrue(mixinsJsonContent.contains("\"PiglinBrainMixin\""),
+            "vanilla_reforged.mixins.json must register PiglinBrainMixin");
     }
 }
 

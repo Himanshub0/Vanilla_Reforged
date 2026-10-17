@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "pocket_repose",
+  "version": "${version}",
+  "name": "Pocket Repose (Test Pool)",
+  "description": "A small Minecraft mod that allows for carriable quaint and cozy pocket dimensions.",
+  "authors": [
+    "BennyBoops",
+    "Vanilla Reforged Team"
+  ],
+  "contact": {
+    "sources": "https://github.com/BennyBoops/PocketRepose"
+  },
+  "license": "MIT",
+  "icon": "assets/pocket_repose/textures/item/keystone.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.vanillareforged.sandbox.pocketrepose.PocketReposeMod"
+    ],
+    "client": [
+      "com.vanillareforged.sandbox.pocketrepose.client.PocketReposeClientMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

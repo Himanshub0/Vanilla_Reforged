@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:magenta_dye"
+    },
+    {
+      "tag": "pocket_repose:suitcases"
+    }
+  ],
+  "result": {
+    "id": "pocket_repose:magenta_suitcase",
+    "count": 1
+  }
+}
