@@ -394,17 +394,15 @@ public class Phase3HostileMobTest {
         assertTrue(content.contains("isOwner(target)"));
         assertTrue(content.contains("stopAnger()"));
 
-        // Armor riding & steering
+        // Armor protection retained, mounting removed
         assertTrue(content.contains("hasWolfArmor()"));
-        assertTrue(content.contains("getControllingPassenger()"));
-        assertTrue(content.contains("getControlledMovementInput"));
-        assertTrue(content.contains("tickControlled"));
-        assertTrue(content.contains("getSaddledSpeed"));
-        assertTrue(content.contains("implements JumpingMount"), "DireWolfEntity must implement JumpingMount");
-        assertTrue(content.contains("executeMountJump"), "Must implement executeMountJump");
-        assertTrue(content.contains("canJump()"), "Must implement canJump()");
-        assertTrue(content.contains("setJumpStrength"), "Must implement setJumpStrength");
-        assertTrue(content.contains("getPassengerAttachmentPos"), "Must override getPassengerAttachmentPos");
+        assertFalse(content.contains("implements JumpingMount"), "DireWolfEntity must not implement JumpingMount");
+        assertFalse(content.contains("player.startRiding(this)"), "Dire Wolf mounting must be removed");
+
+        // Breeding disabled (Apex beasts do not breed)
+        assertTrue(content.contains("boolean canBreedWith(AnimalEntity other)"), "Must override canBreedWith");
+        assertTrue(content.contains("boolean isBreedingItem(ItemStack stack)"), "Must override isBreedingItem");
+        assertTrue(content.contains("WolfEntity createChild(ServerWorld world, PassiveEntity entity)"), "Must override createChild");
 
         // Baby variant elimination (Apex beasts are strictly adult)
         assertTrue(content.contains("isBaby()"), "Must override isBaby() to eliminate baby variant");

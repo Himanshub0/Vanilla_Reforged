@@ -18,6 +18,8 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
+import org.jetbrains.annotations.Nullable;
+
 public class SonicBoomEntity extends PersistentProjectileEntity {
 
     public SonicBoomEntity(EntityType<? extends SonicBoomEntity> entityType, World world) {
@@ -61,33 +63,63 @@ public class SonicBoomEntity extends PersistentProjectileEntity {
 
     private final java.util.Set<Integer> piercedEntityIds = new java.util.HashSet<>();
 
+    private void triggerSplashDamage(ServerWorld serverWorld, Vec3d center, @Nullable Entity directTarget) {
+        Entity owner = this.getOwner();
+        DamageSource source = serverWorld.getDamageSources().sonicBoom(owner != null ? owner : this);
+        double radius = ModConfig.ECHO_SHARD_SPLASH_RADIUS;
+        net.minecraft.util.math.Box splashBox = new net.minecraft.util.math.Box(
+            center.x - radius, center.y - radius, center.z - radius,
+            center.x + radius, center.y + radius, center.z + radius
+        );
+
+        // If direct target is non-living (e.g. End Crystal) and not yet pierced/damaged
+        if (directTarget != null && !(directTarget instanceof LivingEntity) && directTarget != owner) {
+            if (!this.piercedEntityIds.contains(directTarget.getId())) {
+                this.piercedEntityIds.add(directTarget.getId());
+                directTarget.damage(serverWorld, source, ModConfig.ECHO_SHARD_SONIC_BOOM_DAMAGE);
+            }
+        }
+
+        java.util.List<LivingEntity> nearby = serverWorld.getEntitiesByClass(
+            LivingEntity.class,
+            splashBox,
+            entity -> entity.isAlive() && entity != owner && !entity.isSpectator() && entity.squaredDistanceTo(center.x, center.y, center.z) <= radius * radius
+        );
+
+        for (LivingEntity living : nearby) {
+            if (this.piercedEntityIds.contains(living.getId())) {
+                continue;
+            }
+            this.piercedEntityIds.add(living.getId());
+
+            boolean damaged = living.damage(serverWorld, source, ModConfig.ECHO_SHARD_SONIC_BOOM_DAMAGE);
+            if (damaged) {
+                // Warden-style knockback factoring knockback resistance
+                double kbRes = 1.0 - living.getAttributeValue(EntityAttributes.KNOCKBACK_RESISTANCE);
+                double verticalKb = 0.5 * kbRes;
+                double horizontalKb = 2.5 * kbRes;
+                Vec3d diff = new Vec3d(living.getX() - center.x, living.getY() - center.y, living.getZ() - center.z);
+                Vec3d dir = diff.lengthSquared() > 1.0E-4 ? diff.normalize() : this.getVelocity().normalize();
+                living.addVelocity(dir.getX() * horizontalKb, verticalKb, dir.getZ() * horizontalKb);
+            }
+        }
+
+        // Sonic boom impact visuals & sound at impact point
+        serverWorld.spawnParticles(ParticleTypes.SONIC_BOOM, center.getX(), center.getY(), center.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+        serverWorld.playSound(null, center.getX(), center.getY(), center.getZ(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM, SoundCategory.PLAYERS, 3.0f, 1.2f);
+    }
+
     @Override
     protected void onEntityHit(EntityHitResult entityHitResult) {
         Entity target = entityHitResult.getEntity();
         if (target == this.getOwner() || piercedEntityIds.contains(target.getId())) {
             return;
         }
-        piercedEntityIds.add(target.getId());
 
         World world = this.getEntityWorld();
         if (!world.isClient() && world instanceof ServerWorld serverWorld) {
-            Entity owner = this.getOwner();
-            DamageSource source = serverWorld.getDamageSources().sonicBoom(owner != null ? owner : this);
-            
-            // Deal 40% Warden sonic boom damage (12.0f)
-            boolean damaged = target.damage(serverWorld, source, ModConfig.ECHO_SHARD_SONIC_BOOM_DAMAGE);
-            if (damaged && target instanceof LivingEntity living) {
-                // Warden-style knockback factoring knockback resistance
-                double kbRes = 1.0 - living.getAttributeValue(EntityAttributes.KNOCKBACK_RESISTANCE);
-                double verticalKb = 0.5 * kbRes;
-                double horizontalKb = 2.5 * kbRes;
-                Vec3d dir = this.getVelocity().normalize();
-                living.addVelocity(dir.getX() * horizontalKb, verticalKb, dir.getZ() * horizontalKb);
-            }
-
-            // Sonic boom impact visuals & sound
-            serverWorld.spawnParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getBodyY(0.5), target.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
-            serverWorld.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM, SoundCategory.PLAYERS, 3.0f, 1.2f);
+            Vec3d hitPos = entityHitResult.getPos();
+            triggerSplashDamage(serverWorld, hitPos, target);
         }
 
         if (this.piercedEntityIds.size() > this.getPierceLevel()) {
@@ -100,8 +132,7 @@ public class SonicBoomEntity extends PersistentProjectileEntity {
         World world = this.getEntityWorld();
         if (!world.isClient() && world instanceof ServerWorld serverWorld) {
             Vec3d pos = blockHitResult.getPos();
-            serverWorld.spawnParticles(ParticleTypes.SONIC_BOOM, pos.getX(), pos.getY(), pos.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
-            serverWorld.playSound(null, pos.getX(), pos.getY(), pos.getZ(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM, SoundCategory.PLAYERS, 2.0f, 1.2f);
+            triggerSplashDamage(serverWorld, pos, null);
         }
         this.discard();
     }

@@ -735,6 +735,13 @@ public class VanillaReforgedTest {
         // Loot & XP rules
         assertTrue(content.contains("shouldDropLoot"), "Must override shouldDropLoot to return false when tamed");
         assertTrue(content.contains("getExperienceToDrop"), "Must override getExperienceToDrop to drop 0 XP when tamed and 8-12 when wild");
+
+        // Mounting removed & breeding disabled
+        assertFalse(content.contains("implements JumpingMount"), "DireWolfEntity must not implement JumpingMount");
+        assertFalse(content.contains("player.startRiding(this)"), "Dire Wolf mounting must be removed");
+        assertTrue(content.contains("canBreedWith") && content.contains("return false;"), "canBreedWith must return false");
+        assertTrue(content.contains("isBreedingItem") && content.contains("return false;"), "isBreedingItem must return false");
+        assertTrue(content.contains("createChild") && content.contains("return null;"), "createChild must return null");
     }
 
     @Test
@@ -1239,6 +1246,8 @@ public class VanillaReforgedTest {
         // 1. Config parameters
         assertEquals(12.0f, com.vanillareforged.config.ModConfig.ECHO_SHARD_SONIC_BOOM_DAMAGE, 0.001f,
             "Echo Shard sonic boom damage must be 12.0 (40% of Warden's 30.0 damage)");
+        assertEquals(3.0, com.vanillareforged.config.ModConfig.ECHO_SHARD_SPLASH_RADIUS, 0.001,
+            "Echo Shard splash damage radius must be 3.0 blocks");
         assertEquals(2400, com.vanillareforged.config.ModConfig.AMETHYST_SHARD_WEAKNESS_TICKS,
             "Amethyst Shard weakness duration must be 2400 ticks (2 minutes)");
 
@@ -1263,6 +1272,10 @@ public class VanillaReforgedTest {
             "SonicBoomEntity must use sonicBoom damage source");
         assertTrue(sonicContent.contains("ECHO_SHARD_SONIC_BOOM_DAMAGE"),
             "SonicBoomEntity must deal ECHO_SHARD_SONIC_BOOM_DAMAGE");
+        assertTrue(sonicContent.contains("triggerSplashDamage"),
+            "SonicBoomEntity must implement triggerSplashDamage for 3-block splash radius");
+        assertTrue(sonicContent.contains("ECHO_SHARD_SPLASH_RADIUS"),
+            "SonicBoomEntity must use ECHO_SHARD_SPLASH_RADIUS for 3-block splash calculation");
         assertTrue(sonicContent.contains("KNOCKBACK_RESISTANCE"),
             "SonicBoomEntity must apply Warden-style knockback factoring knockback resistance");
         assertTrue(sonicContent.contains("ParticleTypes.SONIC_BOOM"),

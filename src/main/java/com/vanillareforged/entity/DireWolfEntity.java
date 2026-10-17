@@ -8,7 +8,6 @@ import net.minecraft.entity.EntityData;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.JumpingMount;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
@@ -19,6 +18,7 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.passive.WolfVariant;
@@ -35,7 +35,6 @@ import net.minecraft.storage.WriteView;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.LocalDifficulty;
@@ -62,13 +61,13 @@ import org.jetbrains.annotations.Nullable;
  * - Attack damage: 20.0 HP (5x normal wolf).
  * - Scale: 2.0x (EntityAttributes.SCALE = 2.0).
  * - Movement speed: 1.5x normal wolf (0.45 vs 0.30).
- * - Step height: 1.0625 blocks for smooth jumping/riding over terrain.
+ * - Step height: 1.0625 blocks for smooth terrain traversal.
  * - Variants: 0 (Regular pale coat), 1 (Ashen Black coat), 2 (Woods coat).
  * - Eye textures:
  *     Wild: Sinister glowing red eyes across all coats.
  *     Tamed: Authentic natural wolf eyes (NOT glowing red, NOT cartoon puppy eyes).
  * - Never attacks its owner after taming (clears targets and retaliatory anger).
- * - Armor Mounting: When equipped with wolf armor, owner can mount and steer it as a fast, agile mount!
+ * - Armor Protection: Equips wolf armor for damage absorption.
  * - 4-step taming ritual:
  *     Step 1: Active Weakness status effect.
  *     Step 2: Feed Bone -> progresses to stage 1.
@@ -77,7 +76,7 @@ import org.jetbrains.annotations.Nullable;
  *             If fail, smoke + whine, STAYS at stage 2 for repeat attempts.
  *             If success, grants "Apex Companion" advancement!
  */
-public class DireWolfEntity extends WolfEntity implements JumpingMount {
+public class DireWolfEntity extends WolfEntity {
     // 3 Coats: Regular (0), Ashen Black (1), Woods (2) with Wild (red eyes) and Tamed (natural eyes)
     public static final Identifier REGULAR_WILD_TEXTURE = Identifier.of(VanillaReforgedMod.MOD_ID, "textures/entity/dire_wolf/dire_wolf_regular_wild.png");
     public static final Identifier REGULAR_TAMED_TEXTURE = Identifier.of(VanillaReforgedMod.MOD_ID, "textures/entity/dire_wolf/dire_wolf_regular_tamed.png");
@@ -102,7 +101,6 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
             .add(EntityAttributes.MOVEMENT_SPEED, 0.30 * ModConfig.DIRE_WOLF_SPEED_MULTIPLIER)
             .add(EntityAttributes.SCALE, ModConfig.DIRE_WOLF_SCALE)
             .add(EntityAttributes.STEP_HEIGHT, 1.0625)
-            .add(EntityAttributes.JUMP_STRENGTH, 0.8)
             .add(EntityAttributes.FOLLOW_RANGE, 48.0);
     }
 
@@ -218,7 +216,7 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
         if (target == null || target == this) {
             return false;
         }
-        if (this.isSitting() || this.hasPassengers()) {
+        if (this.isSitting()) {
             return false;
         }
         // Never target Creepers (prevents suicide explosions)
@@ -299,122 +297,16 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
     }
 
     // ==========================================
-    // RIDING & VEHICLE CONTROL SYSTEM
+    // ARMOR & FALL DAMAGE
     // ==========================================
-
-    protected float mountJumpStrength;
 
     public boolean hasWolfArmor() {
         return this.isWearingBodyArmor() || !this.getBodyArmor().isEmpty();
     }
 
-    @Nullable
-    @Override
-    public LivingEntity getControllingPassenger() {
-        if (this.isTamed() && this.hasWolfArmor()) {
-            Entity firstPassenger = this.getFirstPassenger();
-            if (firstPassenger instanceof PlayerEntity player && this.isOwner(player)) {
-                return player;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    protected Vec3d getControlledMovementInput(PlayerEntity controllingPlayer, Vec3d movementInput) {
-        float sideways = controllingPlayer.sidewaysSpeed * 0.5f;
-        float forward = controllingPlayer.forwardSpeed;
-        if (forward <= 0.0f) {
-            forward *= 0.25f;
-        }
-        return new Vec3d(sideways, 0.0, forward);
-    }
-
-    protected Vec2f getControlledRotation(LivingEntity controllingPassenger) {
-        return new Vec2f(controllingPassenger.getPitch() * 0.5f, controllingPassenger.getYaw());
-    }
-
-    @Override
-    protected float getSaddledSpeed(PlayerEntity controllingPlayer) {
-        return (float) this.getAttributeValue(EntityAttributes.MOVEMENT_SPEED);
-    }
-
-    @Override
-    protected void tickControlled(PlayerEntity controllingPlayer, Vec3d movementInput) {
-        super.tickControlled(controllingPlayer, movementInput);
-        Vec2f rotation = this.getControlledRotation(controllingPlayer);
-        this.setRotation(rotation.y, rotation.x);
-        this.lastYaw = this.bodyYaw = this.headYaw = this.getYaw();
-
-        if (this.isLogicalSideForUpdatingMovement()) {
-            if (this.isOnGround() && this.mountJumpStrength > 0.0f) {
-                this.executeMountJump(this.mountJumpStrength, movementInput);
-                this.mountJumpStrength = 0.0f;
-            } else if (this.isTouchingWater()) {
-                // Natural mount buoyancy & swimming: stays afloat at surface and rises when jumping
-                double upward = (this.jumping || this.mountJumpStrength > 0.0f) ? 0.08 : 0.02;
-                this.setVelocity(this.getVelocity().x, Math.max(this.getVelocity().y, upward), this.getVelocity().z);
-                this.mountJumpStrength = 0.0f;
-            }
-        }
-    }
-
     @Override
     protected int computeFallDamage(double fallDistance, float damageMultiplier) {
         return super.computeFallDamage(Math.max(0.0, fallDistance - 6.0), damageMultiplier);
-    }
-
-    protected void executeMountJump(float strength, Vec3d movementInput) {
-        double jumpY = (0.42 + strength * 0.40) * 1.5;
-        Vec3d velocity = this.getVelocity();
-        this.setVelocity(velocity.x, jumpY, velocity.z);
-        this.velocityDirty = true;
-        if (movementInput.z > 0.0) {
-            float f = MathHelper.sin(this.getYaw() * ((float) Math.PI / 180.0f));
-            float g = MathHelper.cos(this.getYaw() * ((float) Math.PI / 180.0f));
-            this.setVelocity(this.getVelocity().add(-0.35f * f * strength, 0.0, 0.35f * g * strength));
-        }
-        this.playSound(SoundEvents.ENTITY_WOLF_STEP, 1.0f, 0.8f);
-    }
-
-    @Override
-    public void setJumpStrength(int strength) {
-        if (!this.hasWolfArmor()) return;
-        if (strength < 0) {
-            strength = 0;
-        } else {
-            this.jumping = true;
-        }
-        this.mountJumpStrength = this.clampJumpStrength(strength);
-    }
-
-    @Override
-    public boolean canJump() {
-        return this.isTamed() && this.hasWolfArmor();
-    }
-
-    @Override
-    public void startJumping(int height) {
-        if (!this.hasWolfArmor()) return;
-        this.jumping = true;
-        this.mountJumpStrength = this.clampJumpStrength(height);
-        this.playSound(SoundEvents.ENTITY_HORSE_JUMP, 0.4f, 1.2f);
-    }
-
-    @Override
-    public void stopJumping() {
-    }
-
-    @Override
-    public int getJumpCooldown() {
-        return 3;
-    }
-
-    @Override
-    protected Vec3d getPassengerAttachmentPos(Entity passenger, EntityDimensions dimensions, float scale) {
-        double y = this.isSitting() ? 1.40 : 1.70;
-        double z = this.isSitting() ? 0.0 : 0.15;
-        return new Vec3d(0.0, y, z).rotateY(-this.bodyYaw * ((float) Math.PI / 180.0f));
     }
 
     // ==========================================
@@ -473,7 +365,6 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
                 || isWolfFood(stack)
                 || stack.isOf(Items.SHEARS)
                 || stack.isOf(Items.ARMADILLO_SCUTE)
-                || (this.hasWolfArmor() && !player.shouldCancelInteraction())
                 || stack.isEmpty();
             return eligible ? ActionResult.SUCCESS : super.interactMob(player, hand);
         }
@@ -622,27 +513,21 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
                 return ActionResult.SUCCESS;
             }
 
-            // 4. Healing food
+            // 4. Healing food (heals if injured, no breeding if full health)
             boolean isFood = isWolfFood(stack);
-            if (isFood && this.getHealth() < this.getMaxHealth()) {
-                this.heal(6.0f);
-                stack.decrementUnlessCreative(1, player);
-                this.playSound(SoundEvents.ENTITY_GENERIC_EAT.value(), 1.0f, 1.0f);
-                this.getEntityWorld().sendEntityStatus(this, (byte) 7); // Hearts
-                return ActionResult.SUCCESS;
-            }
-
-            // 5. Riding interaction: if wearing armor and not sneaking and not holding food/armor/shears/scute/lead
-            if (this.hasWolfArmor() && !player.shouldCancelInteraction() && !isFood && !stack.isOf(Items.SHEARS) && !stack.isOf(Items.WOLF_ARMOR) && !stack.isOf(Items.ARMADILLO_SCUTE) && !stack.isOf(Items.LEAD)) {
-                if (this.isSitting()) {
-                    this.setSitting(false);
+            if (isFood) {
+                if (this.getHealth() < this.getMaxHealth()) {
+                    this.heal(6.0f);
+                    stack.decrementUnlessCreative(1, player);
+                    this.playSound(SoundEvents.ENTITY_GENERIC_EAT.value(), 1.0f, 1.0f);
+                    this.getEntityWorld().sendEntityStatus(this, (byte) 7); // Hearts
+                    return ActionResult.SUCCESS;
                 }
-                player.startRiding(this);
-                return ActionResult.SUCCESS;
+                return ActionResult.PASS;
             }
 
-            // 6. Sitting/Standing toggle: when sneaking or when without armor
-            if (stack.isEmpty() || player.shouldCancelInteraction()) {
+            // 5. Sitting/Standing toggle: right-clicking with empty hand or non-functional item
+            if (!stack.isOf(Items.LEAD)) {
                 this.setSitting(!this.isSitting());
                 this.jumping = false;
                 this.navigation.stop();
@@ -688,7 +573,7 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
     }
 
     // ==========================================
-    // APEX BEAST AGE RULES (NO BABY DIRE WOLVES)
+    // BREEDING DISABLED & AGE RULES
     // ==========================================
 
     @Override
@@ -710,25 +595,19 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
     }
 
     @Override
+    public boolean canBreedWith(AnimalEntity other) {
+        return false;
+    }
+
+    @Override
+    public boolean isBreedingItem(ItemStack stack) {
+        return false;
+    }
+
+    @Nullable
+    @Override
     public WolfEntity createChild(ServerWorld world, PassiveEntity entity) {
-        DireWolfEntity child = ModEntities.DIRE_WOLF.create(world, SpawnReason.BREEDING);
-        if (child != null) {
-            child.setBaby(false);
-            child.setBreedingAge(0);
-            if (this.isTamed()) {
-                child.setOwner(this.getOwner());
-                child.setTamed(true, true);
-                child.updateAttributesForTamed();
-            }
-            if (entity instanceof DireWolfEntity otherWolf) {
-                if (this.random.nextBoolean()) {
-                    child.setVariant(this.getVariant());
-                } else {
-                    child.setVariant(otherWolf.getVariant());
-                }
-            }
-        }
-        return child;
+        return null;
     }
 
     @Override
