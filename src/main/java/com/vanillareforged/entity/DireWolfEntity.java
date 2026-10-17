@@ -19,6 +19,7 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.passive.WolfVariant;
@@ -99,10 +100,10 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
         return WolfEntity.createWolfAttributes()
             .add(EntityAttributes.MAX_HEALTH, ModConfig.DIRE_WOLF_MAX_HEALTH)
             .add(EntityAttributes.ATTACK_DAMAGE, ModConfig.DIRE_WOLF_ATTACK_DAMAGE)
-            .add(EntityAttributes.MOVEMENT_SPEED, (ModConfig.DIRE_WOLF_BASE_SPEED_MIN + ModConfig.DIRE_WOLF_BASE_SPEED_MAX) / 2.0) // 0.30 * ModConfig.DIRE_WOLF_SPEED_MULTIPLIER
+            .add(EntityAttributes.MOVEMENT_SPEED, ModConfig.DIRE_WOLF_SPEED) // 0.30 * ModConfig.DIRE_WOLF_SPEED_MULTIPLIER
             .add(EntityAttributes.SCALE, ModConfig.DIRE_WOLF_SCALE)
             .add(EntityAttributes.STEP_HEIGHT, 1.0625)
-            .add(EntityAttributes.JUMP_STRENGTH, (ModConfig.DIRE_WOLF_JUMP_STRENGTH_MIN + ModConfig.DIRE_WOLF_JUMP_STRENGTH_MAX) / 2.0)
+            .add(EntityAttributes.JUMP_STRENGTH, ModConfig.DIRE_WOLF_JUMP_STRENGTH)
             .add(EntityAttributes.FOLLOW_RANGE, 48.0);
     }
 
@@ -132,31 +133,21 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
     @Override
     public EntityData initialize(ServerWorldAccess world, LocalDifficulty difficulty, SpawnReason spawnReason, EntityData entityData) {
         EntityData data = super.initialize(world, difficulty, spawnReason, entityData);
-        // Dire wolves are apex predators: strictly full-grown adults
+        // Dire wolves are apex predators: strictly full-grown adults, fixed stats without random variation
         this.setBaby(false);
         this.setBreedingAge(0);
 
-        // Horse-like individual stat variation:
-        net.minecraft.util.math.random.Random rand = this.getRandom();
-
-        // 1. Health variation: 90.0 - 110.0 HP (centered around 100 HP)
-        double health = ModConfig.DIRE_WOLF_HEALTH_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_HEALTH_MAX - ModConfig.DIRE_WOLF_HEALTH_MIN);
-        double roundedHealth = Math.round(health);
         if (this.getAttributeInstance(EntityAttributes.MAX_HEALTH) != null) {
-            this.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(roundedHealth);
+            this.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(ModConfig.DIRE_WOLF_MAX_HEALTH);
         }
-        this.setHealth((float) roundedHealth);
+        this.setHealth((float) ModConfig.DIRE_WOLF_MAX_HEALTH);
 
-        // 2. Movement speed variation: 0.19 - 0.21 (speed of 8 - 9 blocks/sec)
-        double speed = ModConfig.DIRE_WOLF_BASE_SPEED_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_BASE_SPEED_MAX - ModConfig.DIRE_WOLF_BASE_SPEED_MIN);
         if (this.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED) != null) {
-            this.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED).setBaseValue(speed);
+            this.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED).setBaseValue(ModConfig.DIRE_WOLF_SPEED);
         }
 
-        // 3. Jump strength variation: 0.50 - 0.60 (jump height of 1.5 - 2.0 blocks)
-        double jump = ModConfig.DIRE_WOLF_JUMP_STRENGTH_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_JUMP_STRENGTH_MAX - ModConfig.DIRE_WOLF_JUMP_STRENGTH_MIN);
         if (this.getAttributeInstance(EntityAttributes.JUMP_STRENGTH) != null) {
-            this.getAttributeInstance(EntityAttributes.JUMP_STRENGTH).setBaseValue(jump);
+            this.getAttributeInstance(EntityAttributes.JUMP_STRENGTH).setBaseValue(ModConfig.DIRE_WOLF_JUMP_STRENGTH);
         }
 
         // Biome-based variant is automatically selected by super.initialize() via Variants.select!
@@ -202,15 +193,10 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
 
     @Override
     protected void updateAttributesForTamed() {
-        // Dire Wolf retains its individual high health when tamed (vanilla wolf resets it to 40)
-        double currentMax = this.getAttributeBaseValue(EntityAttributes.MAX_HEALTH);
-        if (currentMax < ModConfig.DIRE_WOLF_HEALTH_MIN) {
-            currentMax = ModConfig.DIRE_WOLF_MAX_HEALTH;
-        }
         if (this.getAttributeInstance(EntityAttributes.MAX_HEALTH) != null) {
-            this.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(currentMax);
+            this.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(ModConfig.DIRE_WOLF_MAX_HEALTH);
         }
-        this.setHealth((float) currentMax);
+        this.setHealth((float) ModConfig.DIRE_WOLF_MAX_HEALTH);
     }
 
     @Override
@@ -362,11 +348,7 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
 
     @Override
     protected float getSaddledSpeed(PlayerEntity controllingPlayer) {
-        float speed = (float) this.getAttributeValue(EntityAttributes.MOVEMENT_SPEED);
-        if (controllingPlayer.isSprinting()) {
-            speed *= 1.25f; // Sprint / gallop run type like horse
-        }
-        return speed;
+        return (float) this.getAttributeValue(EntityAttributes.MOVEMENT_SPEED);
     }
 
     @Override
@@ -740,48 +722,19 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
     }
 
     @Override
+    public boolean canBreedWith(AnimalEntity other) {
+        return false;
+    }
+
+    @Override
+    public boolean isBreedingItem(ItemStack stack) {
+        return false;
+    }
+
+    @Nullable
+    @Override
     public WolfEntity createChild(ServerWorld world, PassiveEntity entity) {
-        DireWolfEntity child = ModEntities.DIRE_WOLF.create(world, SpawnReason.BREEDING);
-        if (child != null) {
-            child.setBaby(false);
-            child.setBreedingAge(0);
-            if (this.isTamed()) {
-                child.setOwner(this.getOwner());
-                child.setTamed(true, true);
-                child.updateAttributesForTamed();
-            }
-            if (entity instanceof DireWolfEntity otherWolf) {
-                // Horse-like breeding stat inheritance: (parent1 + parent2 + random) / 3
-                net.minecraft.util.math.random.Random rand = this.getRandom();
-                double speed = (this.getAttributeBaseValue(EntityAttributes.MOVEMENT_SPEED) 
-                    + otherWolf.getAttributeBaseValue(EntityAttributes.MOVEMENT_SPEED) 
-                    + (ModConfig.DIRE_WOLF_BASE_SPEED_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_BASE_SPEED_MAX - ModConfig.DIRE_WOLF_BASE_SPEED_MIN))) / 3.0;
-                double jump = (this.getAttributeBaseValue(EntityAttributes.JUMP_STRENGTH) 
-                    + otherWolf.getAttributeBaseValue(EntityAttributes.JUMP_STRENGTH) 
-                    + (ModConfig.DIRE_WOLF_JUMP_STRENGTH_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_JUMP_STRENGTH_MAX - ModConfig.DIRE_WOLF_JUMP_STRENGTH_MIN))) / 3.0;
-                double health = (this.getAttributeBaseValue(EntityAttributes.MAX_HEALTH) 
-                    + otherWolf.getAttributeBaseValue(EntityAttributes.MAX_HEALTH) 
-                    + (ModConfig.DIRE_WOLF_HEALTH_MIN + rand.nextDouble() * (ModConfig.DIRE_WOLF_HEALTH_MAX - ModConfig.DIRE_WOLF_HEALTH_MIN))) / 3.0;
-
-                if (child.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED) != null) {
-                    child.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED).setBaseValue(speed);
-                }
-                if (child.getAttributeInstance(EntityAttributes.JUMP_STRENGTH) != null) {
-                    child.getAttributeInstance(EntityAttributes.JUMP_STRENGTH).setBaseValue(jump);
-                }
-                if (child.getAttributeInstance(EntityAttributes.MAX_HEALTH) != null) {
-                    child.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(Math.round(health));
-                }
-                child.setHealth((float) Math.round(health));
-
-                if (rand.nextBoolean()) {
-                    child.setVariant(this.getVariant());
-                } else {
-                    child.setVariant(otherWolf.getVariant());
-                }
-            }
-        }
-        return child;
+        return null;
     }
 
     @Override
