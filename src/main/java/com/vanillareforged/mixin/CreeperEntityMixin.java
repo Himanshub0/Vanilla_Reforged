@@ -1,16 +1,14 @@
 package com.vanillareforged.mixin;
 
 import com.vanillareforged.config.ModConfig;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.CreeperEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
@@ -29,16 +27,27 @@ public abstract class CreeperEntityMixin {
         cir.setReturnValue(cir.getReturnValue().add(EntityAttributes.MAX_HEALTH, ModConfig.CREEPER_MAX_HEALTH));
     }
 
-    @Redirect(
+    @ModifyArg(
         method = "explode",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/server/world/ServerWorld;createExplosion(Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/world/World$ExplosionSourceType;)V"
-        )
+        ),
+        index = 4
     )
-    private void redirectCreeperExplosion(ServerWorld world, Entity entity, double x, double y, double z, float power, World.ExplosionSourceType explosionSourceType) {
-        float effectivePower = power * ModConfig.CREEPER_EXPLOSION_POWER_MULTIPLIER;
-        World.ExplosionSourceType effectiveType = ModConfig.CREEPER_DESTROYS_BLOCKS ? explosionSourceType : World.ExplosionSourceType.NONE;
-        world.createExplosion(entity, x, y, z, effectivePower, effectiveType);
+    private float modifyExplosionPower(float power) {
+        return power * ModConfig.CREEPER_EXPLOSION_POWER_MULTIPLIER;
+    }
+
+    @ModifyArg(
+        method = "explode",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/server/world/ServerWorld;createExplosion(Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/world/World$ExplosionSourceType;)V"
+        ),
+        index = 5
+    )
+    private World.ExplosionSourceType modifyExplosionType(World.ExplosionSourceType type) {
+        return ModConfig.CREEPER_DESTROYS_BLOCKS ? type : World.ExplosionSourceType.NONE;
     }
 }

@@ -1198,8 +1198,8 @@ public class VanillaReforgedTest {
         File creeperMixinFile = new File("src/main/java/com/vanillareforged/mixin/CreeperEntityMixin.java");
         assertTrue(creeperMixinFile.exists());
         String creeperContent = Files.readString(creeperMixinFile.toPath());
-        assertTrue(creeperContent.contains("redirectCreeperExplosion"),
-            "CreeperEntityMixin must implement redirectCreeperExplosion");
+        assertTrue(creeperContent.contains("modifyExplosionPower") && creeperContent.contains("modifyExplosionType"),
+            "CreeperEntityMixin must implement modifyExplosionPower and modifyExplosionType using @ModifyArg");
         assertTrue(creeperContent.contains("World.ExplosionSourceType.NONE"),
             "CreeperEntityMixin must set explosion type to NONE to prevent block destruction");
         assertTrue(creeperContent.contains("ModConfig.CREEPER_EXPLOSION_POWER_MULTIPLIER"),
