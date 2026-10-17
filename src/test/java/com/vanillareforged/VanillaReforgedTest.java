@@ -1297,54 +1297,6 @@ public class VanillaReforgedTest {
     }
 
     @Test
-    @DisplayName("Verify Dire Wolf: 11 blocks/s Speed, Horse-Like Jump, No Breeding, and Reverted Variations")
-    public void testDireWolfHorseLikeDynamicsAndStatVariation() throws IOException {
-        // 1. Config Speed (11 blocks/s), Jump (0.70), and Fixed Health (100 HP)
-        assertEquals(0.255, com.vanillareforged.config.ModConfig.DIRE_WOLF_SPEED, 0.001,
-            "Dire Wolf speed must be 0.255 (11.0 blocks/sec)");
-        assertEquals(0.70, com.vanillareforged.config.ModConfig.DIRE_WOLF_JUMP_STRENGTH, 0.001,
-            "Dire Wolf jump strength must be 0.70 (horse-like jump)");
-        assertEquals(100.0, com.vanillareforged.config.ModConfig.DIRE_WOLF_MAX_HEALTH, 0.001,
-            "Dire Wolf health must be fixed at 100.0 HP with no random variation");
-
-        // Mathematical verification of 11 blocks/sec:
-        double blocksPerSec = com.vanillareforged.config.ModConfig.DIRE_WOLF_SPEED * 43.17;
-        assertTrue(Math.abs(blocksPerSec - 11.0) < 0.05,
-            "Dire Wolf movement speed attribute 0.255 must translate to 11.0 blocks/second");
-
-        // 2. DireWolfEntity Code Inspection
-        File direWolfFile = new File("src/main/java/com/vanillareforged/entity/DireWolfEntity.java");
-        assertTrue(direWolfFile.exists(), "DireWolfEntity.java must exist");
-        String content = Files.readString(direWolfFile.toPath());
-
-        // JumpingMount & Horse-like Jump
-        assertTrue(content.contains("implements JumpingMount"),
-            "DireWolfEntity must implement JumpingMount for horse-like jump meter and controls");
-        assertTrue(content.contains("getJumpVelocity"),
-            "DireWolfEntity must calculate jump velocity from JUMP_STRENGTH like horses");
-        assertTrue(content.contains("executeMountJump"),
-            "DireWolfEntity must execute horse-like jump with forward momentum");
-        assertTrue(content.contains("DIRE_WOLF_JUMP_STRENGTH"),
-            "DireWolfEntity must use DIRE_WOLF_JUMP_STRENGTH");
-
-        // Reverted movement to clean saddled speed
-        assertTrue(content.contains("return (float) this.getAttributeValue(EntityAttributes.MOVEMENT_SPEED);"),
-            "DireWolfEntity getSaddledSpeed must cleanly return MOVEMENT_SPEED attribute");
-
-        // Breeding completely removed
-        assertTrue(content.contains("boolean canBreedWith(AnimalEntity other)"),
-            "DireWolfEntity must override canBreedWith");
-        assertTrue(content.contains("return false;"),
-            "DireWolfEntity canBreedWith and isBreedingItem must return false");
-        assertTrue(content.contains("boolean isBreedingItem(ItemStack stack)"),
-            "DireWolfEntity must override isBreedingItem");
-        assertTrue(content.contains("WolfEntity createChild(ServerWorld world, PassiveEntity entity)"),
-            "DireWolfEntity must override createChild");
-        assertTrue(content.contains("return null;"),
-            "DireWolfEntity createChild must return null to disable breeding");
-    }
-
-    @Test
     @DisplayName("Verify Bow Crossbow Enchantments (Quick Charge, Multishot, Piercing) & Shard Shooting Mechanics")
     public void testBowCrossbowEnchantmentsAndShardShooting() throws IOException {
         // 1. Tag & Enchantment JSON Definitions

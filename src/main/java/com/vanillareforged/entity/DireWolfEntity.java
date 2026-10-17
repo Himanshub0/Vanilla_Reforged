@@ -19,7 +19,6 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.passive.WolfVariant;
@@ -100,10 +99,10 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
         return WolfEntity.createWolfAttributes()
             .add(EntityAttributes.MAX_HEALTH, ModConfig.DIRE_WOLF_MAX_HEALTH)
             .add(EntityAttributes.ATTACK_DAMAGE, ModConfig.DIRE_WOLF_ATTACK_DAMAGE)
-            .add(EntityAttributes.MOVEMENT_SPEED, ModConfig.DIRE_WOLF_SPEED) // 0.30 * ModConfig.DIRE_WOLF_SPEED_MULTIPLIER
+            .add(EntityAttributes.MOVEMENT_SPEED, 0.30 * ModConfig.DIRE_WOLF_SPEED_MULTIPLIER)
             .add(EntityAttributes.SCALE, ModConfig.DIRE_WOLF_SCALE)
             .add(EntityAttributes.STEP_HEIGHT, 1.0625)
-            .add(EntityAttributes.JUMP_STRENGTH, ModConfig.DIRE_WOLF_JUMP_STRENGTH)
+            .add(EntityAttributes.JUMP_STRENGTH, 0.8)
             .add(EntityAttributes.FOLLOW_RANGE, 48.0);
     }
 
@@ -133,22 +132,10 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
     @Override
     public EntityData initialize(ServerWorldAccess world, LocalDifficulty difficulty, SpawnReason spawnReason, EntityData entityData) {
         EntityData data = super.initialize(world, difficulty, spawnReason, entityData);
-        // Dire wolves are apex predators: strictly full-grown adults, fixed stats without random variation
+        // Dire wolves are apex predators: strictly full-grown adults
         this.setBaby(false);
         this.setBreedingAge(0);
-
-        if (this.getAttributeInstance(EntityAttributes.MAX_HEALTH) != null) {
-            this.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(ModConfig.DIRE_WOLF_MAX_HEALTH);
-        }
         this.setHealth((float) ModConfig.DIRE_WOLF_MAX_HEALTH);
-
-        if (this.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED) != null) {
-            this.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED).setBaseValue(ModConfig.DIRE_WOLF_SPEED);
-        }
-
-        if (this.getAttributeInstance(EntityAttributes.JUMP_STRENGTH) != null) {
-            this.getAttributeInstance(EntityAttributes.JUMP_STRENGTH).setBaseValue(ModConfig.DIRE_WOLF_JUMP_STRENGTH);
-        }
 
         // Biome-based variant is automatically selected by super.initialize() via Variants.select!
         // Sync legacy int variant for backwards compatibility with tests and saved worlds:
@@ -193,6 +180,7 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
 
     @Override
     protected void updateAttributesForTamed() {
+        // Dire Wolf retains 100 HP when tamed!
         if (this.getAttributeInstance(EntityAttributes.MAX_HEALTH) != null) {
             this.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(ModConfig.DIRE_WOLF_MAX_HEALTH);
         }
@@ -373,20 +361,20 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
 
     @Override
     protected int computeFallDamage(double fallDistance, float damageMultiplier) {
-        return super.computeFallDamage(Math.max(0.0, fallDistance - 5.0), damageMultiplier);
+        return super.computeFallDamage(Math.max(0.0, fallDistance - 6.0), damageMultiplier);
     }
 
     protected void executeMountJump(float strength, Vec3d movementInput) {
-        float jumpVelocity = this.getJumpVelocity(strength);
+        double jumpY = (0.42 + strength * 0.40) * 1.5;
         Vec3d velocity = this.getVelocity();
-        this.setVelocity(velocity.x, (double) jumpVelocity, velocity.z);
+        this.setVelocity(velocity.x, jumpY, velocity.z);
         this.velocityDirty = true;
         if (movementInput.z > 0.0) {
-            float f = MathHelper.sin(this.getYaw() * 0.017453292f);
-            float g = MathHelper.cos(this.getYaw() * 0.017453292f);
-            this.setVelocity(this.getVelocity().add(-0.4f * f * strength, 0.0, 0.4f * g * strength));
+            float f = MathHelper.sin(this.getYaw() * ((float) Math.PI / 180.0f));
+            float g = MathHelper.cos(this.getYaw() * ((float) Math.PI / 180.0f));
+            this.setVelocity(this.getVelocity().add(-0.35f * f * strength, 0.0, 0.35f * g * strength));
         }
-        this.playSound(SoundEvents.ENTITY_HORSE_JUMP, 0.8f, 1.0f);
+        this.playSound(SoundEvents.ENTITY_WOLF_STEP, 1.0f, 0.8f);
     }
 
     @Override
@@ -722,19 +710,25 @@ public class DireWolfEntity extends WolfEntity implements JumpingMount {
     }
 
     @Override
-    public boolean canBreedWith(AnimalEntity other) {
-        return false;
-    }
-
-    @Override
-    public boolean isBreedingItem(ItemStack stack) {
-        return false;
-    }
-
-    @Nullable
-    @Override
     public WolfEntity createChild(ServerWorld world, PassiveEntity entity) {
-        return null;
+        DireWolfEntity child = ModEntities.DIRE_WOLF.create(world, SpawnReason.BREEDING);
+        if (child != null) {
+            child.setBaby(false);
+            child.setBreedingAge(0);
+            if (this.isTamed()) {
+                child.setOwner(this.getOwner());
+                child.setTamed(true, true);
+                child.updateAttributesForTamed();
+            }
+            if (entity instanceof DireWolfEntity otherWolf) {
+                if (this.random.nextBoolean()) {
+                    child.setVariant(this.getVariant());
+                } else {
+                    child.setVariant(otherWolf.getVariant());
+                }
+            }
+        }
+        return child;
     }
 
     @Override

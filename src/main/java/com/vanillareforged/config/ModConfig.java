@@ -67,13 +67,11 @@ public class ModConfig {
     public static double SHULKER_MAX_HEALTH = 33.0;
     public static double BREEZE_MAX_HEALTH = 33.0;
 
-    // Section 10: Dire Wolf (Stats & Mount Dynamics)
+    // Section 10: Dire Wolf
     public static double DIRE_WOLF_MAX_HEALTH = 100.0;
     public static double DIRE_WOLF_ATTACK_DAMAGE = 20.0; // 5x normal wolf (4.0 * 5)
     public static float DIRE_WOLF_SCALE = 2.0f;
-    public static double DIRE_WOLF_SPEED = 0.255; // 11.0 blocks/sec (0.255 * 43.17 = 11.0 blocks/sec)
     public static double DIRE_WOLF_SPEED_MULTIPLIER = 1.5;
-    public static double DIRE_WOLF_JUMP_STRENGTH = 0.70; // Horse-like jump (~2.0 - 2.5 blocks)
     public static double DIRE_WOLF_TAMING_SUCCESS_CHANCE = 0.25;
     public static int DIRE_WOLF_SPAWN_WEIGHT = 2;
     public static int DIRE_WOLF_XP_MIN = 8;
