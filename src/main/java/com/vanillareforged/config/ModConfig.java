@@ -86,4 +86,9 @@ public class ModConfig {
     // Experience Drops Tuning
     public static double HOSTILE_MOB_XP_MULTIPLIER = 1.20; // +20% more XP dropped by all hostile mobs
     public static int ZOMBIFIED_PIGLIN_BASE_XP = 12; // Base XP for Zombie Piglins (vanilla: 5)
+
+    // Section 11: Crossbow Ammunition (Amethyst & Echo Shards)
+    public static float ECHO_SHARD_SONIC_BOOM_DAMAGE = 12.0f; // 40% of Warden's 30.0 sonic boom
+    public static int AMETHYST_SHARD_WEAKNESS_TICKS = 2400; // 2 minutes (120s * 20t)
 }
+

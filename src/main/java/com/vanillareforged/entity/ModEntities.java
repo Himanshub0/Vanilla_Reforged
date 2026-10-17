@@ -49,6 +49,30 @@ public final class ModEntities {
         .trackRangeBlocks(32)
         .build(DIRE_WOLF_KEY);
 
+    // Amethyst Shard Projectile
+    public static final Identifier AMETHYST_SHARD_ID = Identifier.of(VanillaReforgedMod.MOD_ID, "amethyst_shard");
+    public static final RegistryKey<EntityType<?>> AMETHYST_SHARD_KEY = RegistryKey.of(RegistryKeys.ENTITY_TYPE, AMETHYST_SHARD_ID);
+
+    public static final EntityType<AmethystShardEntity> AMETHYST_SHARD = FabricEntityTypeBuilder.<AmethystShardEntity>create(
+            SpawnGroup.MISC, AmethystShardEntity::new
+        )
+        .dimensions(EntityDimensions.fixed(0.25f, 0.25f))
+        .trackRangeBlocks(64)
+        .trackedUpdateRate(20)
+        .build(AMETHYST_SHARD_KEY);
+
+    // Sonic Boom Projectile
+    public static final Identifier SONIC_BOOM_ID = Identifier.of(VanillaReforgedMod.MOD_ID, "sonic_boom");
+    public static final RegistryKey<EntityType<?>> SONIC_BOOM_KEY = RegistryKey.of(RegistryKeys.ENTITY_TYPE, SONIC_BOOM_ID);
+
+    public static final EntityType<SonicBoomEntity> SONIC_BOOM = FabricEntityTypeBuilder.<SonicBoomEntity>create(
+            SpawnGroup.MISC, SonicBoomEntity::new
+        )
+        .dimensions(EntityDimensions.fixed(0.5f, 0.5f))
+        .trackRangeBlocks(64)
+        .trackedUpdateRate(20)
+        .build(SONIC_BOOM_KEY);
+
     public static void registerEntities() {
         // Register King Zombie
         Registry.register(Registries.ENTITY_TYPE, KING_ZOMBIE_KEY, KING_ZOMBIE);
@@ -57,6 +81,10 @@ public final class ModEntities {
         // Register Dire Wolf
         Registry.register(Registries.ENTITY_TYPE, DIRE_WOLF_KEY, DIRE_WOLF);
         FabricDefaultAttributeRegistry.register(DIRE_WOLF, DireWolfEntity.createDireWolfAttributes());
+
+        // Register Projectiles
+        Registry.register(Registries.ENTITY_TYPE, AMETHYST_SHARD_KEY, AMETHYST_SHARD);
+        Registry.register(Registries.ENTITY_TYPE, SONIC_BOOM_KEY, SONIC_BOOM);
 
         // Spawn restrictions: Dire Wolf spawns on ground like wolves
         SpawnRestrictionAccessor.callRegister(

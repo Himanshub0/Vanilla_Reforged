@@ -28,7 +28,8 @@
     "WitchEntityMixin",
     "HostileMobTuningMixin",
     "ZombieEntityMixin",
-    "MobSpawnerLogicMixin"
+    "MobSpawnerLogicMixin",
+    "CrossbowItemMixin"
   ],
   "client": [],
   "injectors": {

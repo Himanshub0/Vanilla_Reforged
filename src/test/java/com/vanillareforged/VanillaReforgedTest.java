@@ -1232,7 +1232,71 @@ public class VanillaReforgedTest {
         assertTrue(mixinsJsonContent.contains("\"PiglinBrainMixin\""),
             "vanilla_reforged.mixins.json must register PiglinBrainMixin");
     }
+
+    @Test
+    @DisplayName("Verify Crossbow Ammunition: Amethyst & Echo Shards")
+    public void testCrossbowAmmunitionAndShards() throws IOException {
+        // 1. Config parameters
+        assertEquals(12.0f, com.vanillareforged.config.ModConfig.ECHO_SHARD_SONIC_BOOM_DAMAGE, 0.001f,
+            "Echo Shard sonic boom damage must be 12.0 (40% of Warden's 30.0 damage)");
+        assertEquals(2400, com.vanillareforged.config.ModConfig.AMETHYST_SHARD_WEAKNESS_TICKS,
+            "Amethyst Shard weakness duration must be 2400 ticks (2 minutes)");
+
+        // 2. AmethystShardEntity
+        File amethystEntityFile = new File("src/main/java/com/vanillareforged/entity/AmethystShardEntity.java");
+        assertTrue(amethystEntityFile.exists(), "AmethystShardEntity.java must exist");
+        String amethystContent = Files.readString(amethystEntityFile.toPath());
+        assertTrue(amethystContent.contains("FlyingItemEntity"),
+            "AmethystShardEntity must implement FlyingItemEntity for client rendering");
+        assertTrue(amethystContent.contains("StatusEffects.WEAKNESS"),
+            "AmethystShardEntity must apply Weakness effect");
+        assertTrue(amethystContent.contains("StatusEffects.INSTANT_DAMAGE"),
+            "AmethystShardEntity must apply Instant Damage effect");
+        assertTrue(amethystContent.contains("AMETHYST_SHARD_WEAKNESS_TICKS"),
+            "AmethystShardEntity must use AMETHYST_SHARD_WEAKNESS_TICKS for Weakness duration");
+
+        // 3. SonicBoomEntity
+        File sonicEntityFile = new File("src/main/java/com/vanillareforged/entity/SonicBoomEntity.java");
+        assertTrue(sonicEntityFile.exists(), "SonicBoomEntity.java must exist");
+        String sonicContent = Files.readString(sonicEntityFile.toPath());
+        assertTrue(sonicContent.contains("sonicBoom"),
+            "SonicBoomEntity must use sonicBoom damage source");
+        assertTrue(sonicContent.contains("ECHO_SHARD_SONIC_BOOM_DAMAGE"),
+            "SonicBoomEntity must deal ECHO_SHARD_SONIC_BOOM_DAMAGE");
+        assertTrue(sonicContent.contains("KNOCKBACK_RESISTANCE"),
+            "SonicBoomEntity must apply Warden-style knockback factoring knockback resistance");
+        assertTrue(sonicContent.contains("ParticleTypes.SONIC_BOOM"),
+            "SonicBoomEntity must spawn SONIC_BOOM particles");
+
+        // 4. CrossbowItemMixin
+        File crossbowMixinFile = new File("src/main/java/com/vanillareforged/mixin/CrossbowItemMixin.java");
+        assertTrue(crossbowMixinFile.exists(), "CrossbowItemMixin.java must exist");
+        String crossbowContent = Files.readString(crossbowMixinFile.toPath());
+        assertTrue(crossbowContent.contains("getHeldProjectiles") && crossbowContent.contains("getProjectiles"),
+            "CrossbowItemMixin must inject into getHeldProjectiles and getProjectiles");
+        assertTrue(crossbowContent.contains("Items.AMETHYST_SHARD") && crossbowContent.contains("Items.ECHO_SHARD"),
+            "CrossbowItemMixin must accept AMETHYST_SHARD and ECHO_SHARD");
+        assertTrue(crossbowContent.contains("createArrowEntity"),
+            "CrossbowItemMixin must inject into createArrowEntity");
+
+        // 5. Mixin & Entity registration
+        File mixinsJsonFile = new File("src/main/resources/vanilla_reforged.mixins.json");
+        String mixinsJsonContent = Files.readString(mixinsJsonFile.toPath());
+        assertTrue(mixinsJsonContent.contains("\"CrossbowItemMixin\""),
+            "vanilla_reforged.mixins.json must register CrossbowItemMixin");
+
+        File modEntitiesFile = new File("src/main/java/com/vanillareforged/entity/ModEntities.java");
+        String modEntitiesContent = Files.readString(modEntitiesFile.toPath());
+        assertTrue(modEntitiesContent.contains("AMETHYST_SHARD") && modEntitiesContent.contains("SONIC_BOOM"),
+            "ModEntities must define and register AMETHYST_SHARD and SONIC_BOOM");
+
+        File clientFile = new File("src/main/java/com/vanillareforged/client/VanillaReforgedClient.java");
+        String clientContent = Files.readString(clientFile.toPath());
+        assertTrue(clientContent.contains("FlyingItemEntityRenderer") && clientContent.contains("EmptyEntityRenderer"),
+            "VanillaReforgedClient must register FlyingItemEntityRenderer and EmptyEntityRenderer");
+    }
 }
+
 
 
 
