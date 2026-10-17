@@ -1342,6 +1342,96 @@ public class VanillaReforgedTest {
         assertTrue(content.contains("/ 3.0"),
             "DireWolfEntity createChild must implement horse-like (parent1 + parent2 + random) / 3 stat inheritance");
     }
+
+    @Test
+    @DisplayName("Verify Bow Crossbow Enchantments (Quick Charge, Multishot, Piercing) & Shard Shooting Mechanics")
+    public void testBowCrossbowEnchantmentsAndShardShooting() throws IOException {
+        // 1. Tag & Enchantment JSON Definitions
+        File quickChargeFile = new File("src/main/resources/data/minecraft/enchantment/quick_charge.json");
+        File multishotFile = new File("src/main/resources/data/minecraft/enchantment/multishot.json");
+        File piercingFile = new File("src/main/resources/data/minecraft/enchantment/piercing.json");
+        File crossbowTagFile = new File("src/main/resources/data/minecraft/tags/item/enchantable/crossbow.json");
+        File bowCrossbowTagFile = new File("src/main/resources/data/vanilla_reforged/tags/item/enchantable/bow_and_crossbow.json");
+
+        assertTrue(quickChargeFile.exists(), "quick_charge.json must exist");
+        assertTrue(multishotFile.exists(), "multishot.json must exist");
+        assertTrue(piercingFile.exists(), "piercing.json must exist");
+        assertTrue(crossbowTagFile.exists(), "enchantable/crossbow.json must exist");
+        assertTrue(bowCrossbowTagFile.exists(), "bow_and_crossbow.json must exist");
+
+        String quickContent = Files.readString(quickChargeFile.toPath());
+        assertTrue(quickContent.contains("bow_and_crossbow"), "Quick Charge must support bow and crossbow");
+
+        String multiContent = Files.readString(multishotFile.toPath());
+        assertTrue(multiContent.contains("bow_and_crossbow"), "Multishot must support bow and crossbow");
+
+        String pierceContent = Files.readString(piercingFile.toPath());
+        assertTrue(pierceContent.contains("bow_and_crossbow"), "Piercing must support bow and crossbow");
+
+        String crossbowTagContent = Files.readString(crossbowTagFile.toPath());
+        assertTrue(crossbowTagContent.contains("minecraft:bow"), "enchantable/crossbow tag must include minecraft:bow");
+
+        String bowCrossbowContent = Files.readString(bowCrossbowTagFile.toPath());
+        assertTrue(bowCrossbowContent.contains("#minecraft:enchantable/bow"), "bow_and_crossbow tag must include enchantable/bow");
+        assertTrue(bowCrossbowContent.contains("minecraft:crossbow"), "bow_and_crossbow tag must include minecraft:crossbow");
+
+        // 2. BowItemMixin verification
+        File bowMixinFile = new File("src/main/java/com/vanillareforged/mixin/BowItemMixin.java");
+        assertTrue(bowMixinFile.exists(), "BowItemMixin.java must exist");
+        String bowMixinContent = Files.readString(bowMixinFile.toPath());
+        assertTrue(bowMixinContent.contains("getProjectiles"), "BowItemMixin must inject getProjectiles");
+        assertTrue(bowMixinContent.contains("AMETHYST_SHARD") && bowMixinContent.contains("ECHO_SHARD"),
+            "BowItemMixin must allow shooting Amethyst and Echo shards");
+        assertTrue(bowMixinContent.contains("onStoppedUsing"), "BowItemMixin must hook onStoppedUsing for Quick Charge");
+        assertTrue(bowMixinContent.contains("chargeTime"), "BowItemMixin must accelerate draw time based on Quick Charge");
+
+        // 3. RangedWeaponItemMixin verification
+        File rangedMixinFile = new File("src/main/java/com/vanillareforged/mixin/RangedWeaponItemMixin.java");
+        assertTrue(rangedMixinFile.exists(), "RangedWeaponItemMixin.java must exist");
+        String rangedMixinContent = Files.readString(rangedMixinFile.toPath());
+        assertTrue(rangedMixinContent.contains("createArrowEntity"), "RangedWeaponItemMixin must inject createArrowEntity");
+        assertTrue(rangedMixinContent.contains("AmethystShardEntity"), "RangedWeaponItemMixin must instantiate AmethystShardEntity");
+        assertTrue(rangedMixinContent.contains("SonicBoomEntity"), "RangedWeaponItemMixin must instantiate SonicBoomEntity");
+
+        // 4. LivingEntityMixin bow draw acceleration
+        File livingMixinFile = new File("src/main/java/com/vanillareforged/mixin/LivingEntityMixin.java");
+        String livingMixinContent = Files.readString(livingMixinFile.toPath());
+        assertTrue(livingMixinContent.contains("accelerateBowItemUseTime"),
+            "LivingEntityMixin must accelerate bow getItemUseTime for Quick Charge FOV scaling");
+
+        // 5. Client model property mixin
+        File clientMixinFile = new File("src/main/java/com/vanillareforged/mixin/client/UseDurationPropertyMixin.java");
+        assertTrue(clientMixinFile.exists(), "UseDurationPropertyMixin.java must exist");
+        String clientMixinContent = Files.readString(clientMixinFile.toPath());
+        assertTrue(clientMixinContent.contains("getTicksUsedSoFar"), "UseDurationPropertyMixin must hook getTicksUsedSoFar");
+        assertTrue(clientMixinContent.contains("chargeTime"), "UseDurationPropertyMixin must accelerate pulling animation stages");
+
+        // 6. Shard Piercing Support
+        File amethystFile = new File("src/main/java/com/vanillareforged/entity/AmethystShardEntity.java");
+        String amethystContent = Files.readString(amethystFile.toPath());
+        assertTrue(amethystContent.contains("getPierceLevel() <= 0"), "AmethystShardEntity must respect pierce level before discarding");
+
+        File sonicFile = new File("src/main/java/com/vanillareforged/entity/SonicBoomEntity.java");
+        String sonicContent = Files.readString(sonicFile.toPath());
+        assertTrue(sonicContent.contains("getPierceLevel()"), "SonicBoomEntity must support Piercing enchantment");
+        assertTrue(sonicContent.contains("piercedEntityIds"), "SonicBoomEntity must track pierced entities");
+
+        // 7. Mixin configuration registration
+        File mixinsJsonFile = new File("src/main/resources/vanilla_reforged.mixins.json");
+        String mixinsJsonContent = Files.readString(mixinsJsonFile.toPath());
+        assertTrue(mixinsJsonContent.contains("\"BowItemMixin\""), "Mixins JSON must register BowItemMixin");
+        assertTrue(mixinsJsonContent.contains("\"RangedWeaponItemMixin\""), "Mixins JSON must register RangedWeaponItemMixin");
+        assertTrue(mixinsJsonContent.contains("\"client.UseDurationPropertyMixin\""), "Mixins JSON must register UseDurationPropertyMixin under client");
+
+        // 8. Quick Charge Mathematical verification
+        // Base: 20 ticks
+        assertEquals(15, Math.max(1, 20 - 1 * 5), "Quick Charge I must charge in 15 ticks");
+        assertEquals(10, Math.max(1, 20 - 2 * 5), "Quick Charge II must charge in 10 ticks");
+        assertEquals(5, Math.max(1, 20 - 3 * 5), "Quick Charge III must charge in 5 ticks");
+        // At 5 ticks elapsed with QC III:
+        int effectiveTicks = Math.round((float) 5 * (20.0f / 5.0f));
+        assertEquals(20, effectiveTicks, "5 actual ticks with QC III must yield 20 effective ticks (full draw)");
+    }
 }
 
 

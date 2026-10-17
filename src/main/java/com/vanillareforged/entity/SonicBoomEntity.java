@@ -59,12 +59,15 @@ public class SonicBoomEntity extends PersistentProjectileEntity {
         }
     }
 
+    private final java.util.Set<Integer> piercedEntityIds = new java.util.HashSet<>();
+
     @Override
     protected void onEntityHit(EntityHitResult entityHitResult) {
         Entity target = entityHitResult.getEntity();
-        if (target == this.getOwner()) {
+        if (target == this.getOwner() || piercedEntityIds.contains(target.getId())) {
             return;
         }
+        piercedEntityIds.add(target.getId());
 
         World world = this.getEntityWorld();
         if (!world.isClient() && world instanceof ServerWorld serverWorld) {
@@ -86,7 +89,10 @@ public class SonicBoomEntity extends PersistentProjectileEntity {
             serverWorld.spawnParticles(ParticleTypes.SONIC_BOOM, target.getX(), target.getBodyY(0.5), target.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
             serverWorld.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM, SoundCategory.PLAYERS, 3.0f, 1.2f);
         }
-        this.discard();
+
+        if (this.piercedEntityIds.size() > this.getPierceLevel()) {
+            this.discard();
+        }
     }
 
     @Override

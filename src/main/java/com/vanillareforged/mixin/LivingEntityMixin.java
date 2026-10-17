@@ -135,4 +135,22 @@ public abstract class LivingEntityMixin {
             cir.setReturnValue(boosted);
         }
     }
+
+    /**
+     * Accelerates bow use time for Quick Charge on Bows so FOV zoom and draw calculations scale smoothly.
+     */
+    @Inject(method = "getItemUseTime()I", at = @At("RETURN"), cancellable = true)
+    private void accelerateBowItemUseTime(CallbackInfoReturnable<Integer> cir) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (entity.isUsingItem() && entity.getActiveItem().isOf(Items.BOW)) {
+            int quickCharge = com.vanillareforged.util.ModEnchantmentHelper.getQuickChargeLevel(entity.getActiveItem());
+            if (quickCharge > 0) {
+                int actualTicks = cir.getReturnValue();
+                int chargeTime = Math.max(1, 20 - quickCharge * 5);
+                int effectiveTicks = Math.round((float) actualTicks * (20.0f / (float) chargeTime));
+                cir.setReturnValue(effectiveTicks);
+            }
+        }
+    }
 }
+

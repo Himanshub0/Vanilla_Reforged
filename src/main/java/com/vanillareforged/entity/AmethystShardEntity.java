@@ -61,7 +61,9 @@ public class AmethystShardEntity extends PersistentProjectileEntity implements F
             );
             serverWorld.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BLOCK_AMETHYST_CLUSTER_BREAK, SoundCategory.NEUTRAL, 1.0f, 1.2f);
         }
-        this.discard();
+        if (this.getPierceLevel() <= 0) {
+            this.discard();
+        }
     }
 
     @Override

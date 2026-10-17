@@ -29,9 +29,13 @@
     "HostileMobTuningMixin",
     "ZombieEntityMixin",
     "MobSpawnerLogicMixin",
-    "CrossbowItemMixin"
+    "CrossbowItemMixin",
+    "BowItemMixin",
+    "RangedWeaponItemMixin"
   ],
-  "client": [],
+  "client": [
+    "client.UseDurationPropertyMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }
