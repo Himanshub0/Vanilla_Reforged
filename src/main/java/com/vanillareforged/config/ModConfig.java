@@ -91,5 +91,12 @@ public class ModConfig {
     public static float ECHO_SHARD_SONIC_BOOM_DAMAGE = 12.0f; // 40% of Warden's 30.0 sonic boom
     public static double ECHO_SHARD_SPLASH_RADIUS = 3.0; // 3-block splash damage radius
     public static int AMETHYST_SHARD_WEAKNESS_TICKS = 2400; // 2 minutes (120s * 20t)
+
+    // Minecart Chunk Loading (Continuous Rail & Transport Utility)
+    public static boolean MINECART_CHUNK_LOADING_ENABLED = true;
+    public static int MINECART_CHUNK_LOADING_RADIUS = 3; // Radius of chunks kept loaded around minecarts
+
+    // Animal Drops: Pigs and Sheep drop Leather
+    public static boolean PIG_SHEEP_DROP_LEATHER = true;
 }
 

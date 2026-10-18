@@ -1398,6 +1398,60 @@ public class VanillaReforgedTest {
         int effectiveTicks = Math.round((float) 5 * (20.0f / 5.0f));
         assertEquals(20, effectiveTicks, "5 actual ticks with QC III must yield 20 effective ticks (full draw)");
     }
+
+    @Test
+    @DisplayName("Verify Minecart Chunk Loading, Rotten Flesh Smelting, and Animal Leather Drops")
+    public void testMinecartChunkLoadingRottenFleshAndAnimalLeatherDrops() throws IOException {
+        // 1. Config validation
+        assertTrue(com.vanillareforged.config.ModConfig.MINECART_CHUNK_LOADING_ENABLED, "Minecart chunk loading must be enabled by default");
+        assertEquals(3, com.vanillareforged.config.ModConfig.MINECART_CHUNK_LOADING_RADIUS, "Default chunk loading radius must be 3");
+        assertTrue(com.vanillareforged.config.ModConfig.PIG_SHEEP_DROP_LEATHER, "Pig and sheep leather drops must be enabled by default");
+
+        // 2. AbstractMinecartEntityMixin validation
+        File mixinJava = new File("src/main/java/com/vanillareforged/mixin/AbstractMinecartEntityMixin.java");
+        assertTrue(mixinJava.exists(), "AbstractMinecartEntityMixin.java must exist");
+        String mixinSource = Files.readString(mixinJava.toPath());
+        assertTrue(mixinSource.contains("@Mixin(AbstractMinecartEntity.class)"), "Must target AbstractMinecartEntity");
+        assertTrue(mixinSource.contains("ChunkTicketType.PORTAL"), "Must use ChunkTicketType.PORTAL");
+        assertTrue(mixinSource.contains("addTicket"), "Must add chunk tickets");
+        assertTrue(mixinSource.contains("getVelocity()"), "Must check velocity for lookahead loading");
+
+        // 3. Mixin registration in vanilla_reforged.mixins.json
+        File mixinsJson = new File("src/main/resources/vanilla_reforged.mixins.json");
+        String mixinsJsonContent = Files.readString(mixinsJson.toPath());
+        assertTrue(mixinsJsonContent.contains("\"AbstractMinecartEntityMixin\""), "Mixins JSON must register AbstractMinecartEntityMixin");
+
+        // 4. Rotten Flesh to Leather Recipes
+        File smeltingFile = new File("src/main/resources/data/vanilla_reforged/recipe/leather_from_smelting_rotten_flesh.json");
+        assertTrue(smeltingFile.exists(), "leather_from_smelting_rotten_flesh.json must exist");
+        String smeltingJson = Files.readString(smeltingFile.toPath());
+        assertTrue(smeltingJson.contains("\"minecraft:smelting\""), "Recipe type must be minecraft:smelting");
+        assertTrue(smeltingJson.contains("\"minecraft:rotten_flesh\""), "Ingredient must be rotten flesh");
+        assertTrue(smeltingJson.contains("\"minecraft:leather\""), "Result must be leather");
+
+        File smokingFile = new File("src/main/resources/data/vanilla_reforged/recipe/leather_from_smoking_rotten_flesh.json");
+        assertTrue(smokingFile.exists(), "leather_from_smoking_rotten_flesh.json must exist");
+        String smokingJson = Files.readString(smokingFile.toPath());
+        assertTrue(smokingJson.contains("\"minecraft:smoking\""), "Recipe type must be minecraft:smoking");
+        assertTrue(smokingJson.contains("\"minecraft:rotten_flesh\""), "Ingredient must be rotten flesh");
+        assertTrue(smokingJson.contains("\"minecraft:leather\""), "Result must be leather");
+
+        File campfireFile = new File("src/main/resources/data/vanilla_reforged/recipe/leather_from_campfire_cooking_rotten_flesh.json");
+        assertTrue(campfireFile.exists(), "leather_from_campfire_cooking_rotten_flesh.json must exist");
+        String campfireJson = Files.readString(campfireFile.toPath());
+        assertTrue(campfireJson.contains("\"minecraft:campfire_cooking\""), "Recipe type must be minecraft:campfire_cooking");
+        assertTrue(campfireJson.contains("\"minecraft:rotten_flesh\""), "Ingredient must be rotten flesh");
+        assertTrue(campfireJson.contains("\"minecraft:leather\""), "Result must be leather");
+
+        // 5. ModLootManager Animal Drops
+        File lootManagerFile = new File("src/main/java/com/vanillareforged/loot/ModLootManager.java");
+        assertTrue(lootManagerFile.exists(), "ModLootManager.java must exist");
+        String lootManagerSource = Files.readString(lootManagerFile.toPath());
+        assertTrue(lootManagerSource.contains("EntityType.PIG"), "ModLootManager must handle EntityType.PIG");
+        assertTrue(lootManagerSource.contains("EntityType.SHEEP"), "ModLootManager must handle EntityType.SHEEP");
+        assertTrue(lootManagerSource.contains("Items.LEATHER"), "ModLootManager must drop Items.LEATHER");
+        assertTrue(lootManagerSource.contains("EnchantedCountIncreaseLootFunction"), "Must support Looting enchantment for leather drops");
+    }
 }
 
 

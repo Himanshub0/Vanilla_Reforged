@@ -47,6 +47,9 @@ Minecraft is one of the greatest sandbox games ever created, but as the game has
 | **Fragile Pets** | **The Dire Wolf:** A 100 HP, 20 attack damage beast with a 4-step taming ritual that can be equipped with wolf armor and ridden as an agile mount. |
 | **Stalling Mob Grinders** | **Continuous Spawner Blocks:** Spawner intervals reduced from 10–40s down to 1–3s, and the nearby entity cap expanded to 16 for high-throughput mob farming. |
 | **Useless Gold Gear** | **Viable Gold Equipment:** Greatly increased durability on golden tools and armor, plus villager trades trading enchanted gold gear for ingots. |
+| **Frozen Rail Transit** | **Minecart Chunk Loading:** Minecarts dynamically load chunks with velocity lookahead so long-distance rail systems and hopper freight carts never freeze in unloaded chunks. |
+| **Useless Rotten Flesh** | **Leather Curing:** Smelt or cook Rotten Flesh in furnaces, smokers, or campfires to produce clean Leather. |
+| **Leather Bottlenecks** | **Livestock Leather Drops:** Pigs and sheep drop 0–2 Leather (boosted by Looting), making all farm animal husbandry rewarding. |
 
 ---
 
@@ -122,6 +125,13 @@ Minecraft is one of the greatest sandbox games ever created, but as the game has
 * **Viable Gold Equipment:** Golden tools and armor receive substantial durability buffs, giving gold gear a distinct high-speed, enchantable niche in gameplay.
 * **Villager Gold Trades:** Armorer, Toolsmith, and Weaponsmith villagers offer enchanted golden equipment in exchange for gold ingots.
 * **Mid-Barter Piglin Drop Safety:** Piglins drop gold nuggets upon death rather than raw ingots.
+
+---
+
+### 🚂 6. Transport, Curing & Animal Farming
+* **Minecart Chunk Loading:** All minecarts dynamically maintain entity-ticking chunk tickets along their rails, complete with velocity-based lookahead loading so automated transit lines, hopper carts, and freight trains never stall across unloaded chunks.
+* **Rotten Flesh to Leather:** Excess zombie rotten flesh can now be cured into clean Leather via furnace smelting (200t), smoker smoking (100t), or campfire cooking (600t).
+* **Livestock Leather Drops:** Pigs and sheep now drop 0–2 Leather upon death (increased with Looting), eliminating early-to-midgame leather bottlenecks for enchanting setups.
 
 ---
 

@@ -1,19 +1,25 @@
 package com.vanillareforged.loot;
 
+import com.vanillareforged.config.ModConfig;
 import com.vanillareforged.enchantment.ModEnchantments;
 import com.vanillareforged.item.ModItems;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.EntityType;
 import net.minecraft.item.Items;
 import net.minecraft.loot.LootPool;
 import net.minecraft.loot.LootTables;
 import net.minecraft.loot.condition.RandomChanceLootCondition;
 import net.minecraft.loot.entry.ItemEntry;
+import net.minecraft.loot.function.EnchantedCountIncreaseLootFunction;
+import net.minecraft.loot.function.SetCountLootFunction;
 import net.minecraft.loot.function.SetEnchantmentsLootFunction;
 import net.minecraft.loot.provider.number.ConstantLootNumberProvider;
+import net.minecraft.loot.provider.number.UniformLootNumberProvider;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.Identifier;
 
 /**
  * Comprehensive loot table management and structure distribution for Vanilla Reforged.
@@ -227,6 +233,25 @@ public final class ModLootManager {
                         .apply(new SetEnchantmentsLootFunction.Builder()
                             .enchantment(curseDoubleEdge, ConstantLootNumberProvider.create(1.0f))));
                 tableBuilder.pool(pool);
+            }
+
+            // =========================================================================
+            // Animal Drops: Pigs and Sheep drop Leather (0-2 base, +0-1 per Looting)
+            // =========================================================================
+            if (ModConfig.PIG_SHEEP_DROP_LEATHER) {
+                boolean isPig = (EntityType.PIG.getLootTableKey().isPresent() && EntityType.PIG.getLootTableKey().get().equals(key))
+                    || key.getValue().equals(Identifier.ofVanilla("entities/pig"));
+                boolean isSheep = (EntityType.SHEEP.getLootTableKey().isPresent() && EntityType.SHEEP.getLootTableKey().get().equals(key))
+                    || key.getValue().equals(Identifier.ofVanilla("entities/sheep"));
+
+                if (isPig || isSheep) {
+                    LootPool.Builder leatherPool = LootPool.builder()
+                        .rolls(ConstantLootNumberProvider.create(1.0f))
+                        .with(ItemEntry.builder(Items.LEATHER)
+                            .apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(0.0f, 2.0f)))
+                            .apply(EnchantedCountIncreaseLootFunction.builder(registries, UniformLootNumberProvider.create(0.0f, 1.0f))));
+                    tableBuilder.pool(leatherPool);
+                }
             }
         });
     }

@@ -31,7 +31,8 @@
     "MobSpawnerLogicMixin",
     "CrossbowItemMixin",
     "BowItemMixin",
-    "RangedWeaponItemMixin"
+    "RangedWeaponItemMixin",
+    "AbstractMinecartEntityMixin"
   ],
   "client": [
     "client.UseDurationPropertyMixin"
